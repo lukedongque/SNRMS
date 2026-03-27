@@ -1,0 +1,20 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SNRMS.Core.Models
+{
+    public class RotationAssignment
+    {
+        public int AssignmentID { get; set; }
+        public int GroupID { get; set; }
+        public int StationID {  get; set; }
+        public string DaySlot { get; set; } = string.Empty;
+
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+
+        public  Group Group { get; set; } = null!;
+        public  Station Station { get; set; } = null!;
+    }
+}

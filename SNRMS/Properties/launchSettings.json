@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "SNRMS (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "SNRMS (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
