@@ -6,9 +6,9 @@ namespace SNRMS.Core.Models
 {
     public class RotationAssignment
     {
-        public int AssignmentID { get; set; }
-        public int GroupID { get; set; }
-        public int StationID {  get; set; }
+        public int RotationAssignmentId { get; set; }
+        public int GroupId { get; set; }
+        public int StationId {  get; set; }
         public string DaySlot { get; set; } = string.Empty;
 
         public DateOnly StartDate { get; set; }

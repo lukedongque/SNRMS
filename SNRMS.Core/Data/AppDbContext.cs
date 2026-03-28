@@ -20,5 +20,26 @@ namespace SNRMS.Core.Data
         public DbSet<RotationAssignment> RotationAssignments { get; set; }
         public DbSet<Station> Stations { get; set; }
         public DbSet<Hospital> Hospitals { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<User>().HasData(new User { 
+                UserId = 1, 
+                Username = "admin", 
+                PasswordHash = "admin123", 
+                Role = "Admin", 
+                StudentId = null, 
+                InstructorId = null 
+            });
+
+            modelBuilder.Entity<Section>()
+                .HasOne(s => s.Instructor)
+                .WithMany()
+                .HasForeignKey(s => s.InstructorId); ;
+
+            
+        }
     }
 }

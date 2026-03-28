@@ -6,13 +6,13 @@ namespace SNRMS.Core.Models
 {
     public class Student
     {
-        public int StudentID { get; set; }
+        public int StudentId { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string StudentNumber { get; set; } = string.Empty;
 
-        public int? GroupID { get; set; }
+        public int? GroupId { get; set; }
 
         public Group? Group { get; set; }
     }
