@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SNRMS.Core.Models;
+using BCrypt.Net;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -28,7 +29,7 @@ namespace SNRMS.Core.Data
             modelBuilder.Entity<User>().HasData(new User { 
                 UserId = 1, 
                 Username = "admin", 
-                PasswordHash = "admin123", 
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
                 Role = "Admin", 
                 StudentId = null, 
                 InstructorId = null 

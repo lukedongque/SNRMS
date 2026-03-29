@@ -10,6 +10,8 @@ namespace SNRMS.Core.Models
         public string Username { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+
 
         public int? StudentId { get; set; }
         public int? InstructorId { get; set; }
