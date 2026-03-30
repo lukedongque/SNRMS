@@ -13,4 +13,5 @@ namespace SNRMS.Core.Services
             _dbContext = dbContex;
         }
     }
+
 }

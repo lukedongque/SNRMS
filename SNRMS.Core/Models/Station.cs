@@ -12,6 +12,7 @@ namespace SNRMS.Core.Models
 
         public int HospitalId { get; set; }
         public Hospital Hospital { get; set; } = null!;
+        public ICollection<RotationAssignment> RotationAssignments { get; set; } = new List<RotationAssignment>();
 
     }
 }
