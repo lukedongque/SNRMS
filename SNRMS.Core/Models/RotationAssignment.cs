@@ -16,5 +16,7 @@ namespace SNRMS.Core.Models
 
         public  Group Group { get; set; } = null!;
         public  Station Station { get; set; } = null!;
+        public ICollection<StudentRotationHistory> RotationHistories { get; set; } = new List<StudentRotationHistory>();
+
     }
 }

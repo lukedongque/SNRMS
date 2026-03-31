@@ -38,7 +38,21 @@ namespace SNRMS.Core.Services
             var instructor = await _dbContext.Instructors.FindAsync(instructorId);
             if (instructor == null)
                 throw new InvalidOperationException("Instructor not found.");
-            section.Instructor = instructor;
+            var alreadyAssignedSection = await _dbContext.Sections.FirstOrDefaultAsync(s => s.InstructorId == instructorId);
+            if (alreadyAssignedSection != null)
+                throw new InvalidOperationException("Instructor is already assigned to another section. Unassign them first.");
+            section.InstructorId = instructorId;
+            await _dbContext.SaveChangesAsync();
+            return section;
+        }
+        public async Task<Section?> UnassignInstructorAsync(int sectionId)
+        {
+            var section = await _dbContext.Sections.FindAsync(sectionId);
+            if (section == null)
+                throw new InvalidOperationException("Section not found.");
+            if (section.InstructorId == null)
+                throw new InvalidOperationException("No instructor assigned to this section.");
+            section.InstructorId = null;
             await _dbContext.SaveChangesAsync();
             return section;
         }

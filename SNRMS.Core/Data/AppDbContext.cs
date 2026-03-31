@@ -22,6 +22,7 @@ namespace SNRMS.Core.Data
         public DbSet<Station> Stations { get; set; }
         public DbSet<Hospital> Hospitals { get; set; }
 
+        public DbSet<StudentRotationHistory> StudentRotationHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

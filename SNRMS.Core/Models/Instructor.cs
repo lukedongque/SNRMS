@@ -11,7 +11,6 @@ namespace SNRMS.Core.Models
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
 
-        public int? SectionId { get; set; }
-        public Section? Section { get; set; }
+       
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SNRMS.Core.Data;
 
@@ -11,9 +12,11 @@ using SNRMS.Core.Data;
 namespace SNRMS.Core.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331054238_AddRotationAssignmentHistory")]
+    partial class AddRotationAssignmentHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,7 +88,15 @@ namespace SNRMS.Core.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("SectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SectionId1")
+                        .HasColumnType("int");
+
                     b.HasKey("InstructorId");
+
+                    b.HasIndex("SectionId1");
 
                     b.ToTable("Instructors");
                 });
@@ -272,7 +283,7 @@ namespace SNRMS.Core.Migrations
                         {
                             UserId = 1,
                             IsActive = true,
-                            PasswordHash = "$2a$11$.8LeKkSnRNxM7T4VcCHYtud0qDpozMRy800VLwtwgcZ0WG7R0nlnO",
+                            PasswordHash = "$2a$11$tlNmKJBd68TQi.hB3nnYlO3mk3b2QIYZ7jcuAfoMpCq.eNScdsKkm",
                             Role = "Admin",
                             Username = "admin"
                         });
@@ -285,6 +296,15 @@ namespace SNRMS.Core.Migrations
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Section");
+                });
+
+            modelBuilder.Entity("SNRMS.Core.Models.Instructor", b =>
+                {
+                    b.HasOne("SNRMS.Core.Models.Section", "Section")
+                        .WithMany()
+                        .HasForeignKey("SectionId1");
 
                     b.Navigation("Section");
                 });

@@ -13,7 +13,7 @@ namespace SNRMS.Core.Models
         public string StudentNumber { get; set; } = string.Empty;
 
         public int? GroupId { get; set; }
-
         public Group? Group { get; set; }
+        public ICollection<StudentRotationHistory> RotationHistory { get; set; } = new List<StudentRotationHistory>();
     }
 }

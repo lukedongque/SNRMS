@@ -61,7 +61,9 @@ namespace SNRMS.Core.Services
             var hospital = await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).FirstOrDefaultAsync(h => h.HospitalId == hospitalId);
             if (hospital == null)
                 throw new InvalidOperationException("Hospital not found.");
-            //hospital.Stations.SelectMany(s => s.RotationAssignments).ToList().ForEach(ra => ra.StationId = null); to be fixed
+            bool hasAssignments = hospital.Stations.Any(s => s.RotationAssignments.Any());
+            if(hasAssignments)  
+                throw new InvalidOperationException("Cannot delete hospital with assigned rotations.");
             _dbContext.Stations.RemoveRange(hospital.Stations);
             _dbContext.Hospitals.Remove(hospital);
             await _dbContext.SaveChangesAsync();
