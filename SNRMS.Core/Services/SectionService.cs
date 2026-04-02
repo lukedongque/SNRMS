@@ -29,6 +29,7 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return section;
         }
+       
 
         public async Task<Section?> AssignInstructorAsync(int sectionId, int instructorId)
         {
@@ -57,12 +58,16 @@ namespace SNRMS.Core.Services
             return section;
         }
 
-        public async Task<List<Section>> GetAllSectionAsync()
+        public async Task<List<Section>> GetAllSectionsAsync()
         {
 
             return await _dbContext.Sections.Include(s => s.Instructor).Include(s => s.Groups).ToListAsync();
         }
 
+        public async Task<List<Section>> GetSectionsByYearLevelAsync(int yearLevel)
+        {
+            return await _dbContext.Sections.Include(s => s.Instructor).Include(s => s.Groups).Where(s => s.YearLevel == yearLevel).ToListAsync();
+        }
         public async Task<Section?> DeleteSectionAsync(int sectionId)
         {
             var section = await _dbContext.Sections.Include(s => s.Groups).ThenInclude(s => s.Students).FirstOrDefaultAsync(s => s.SectionId == sectionId);
