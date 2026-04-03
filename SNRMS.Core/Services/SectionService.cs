@@ -68,6 +68,13 @@ namespace SNRMS.Core.Services
         {
             return await _dbContext.Sections.Include(s => s.Instructor).Include(s => s.Groups).Where(s => s.YearLevel == yearLevel).ToListAsync();
         }
+        public async Task<Section> GetInstructorSectionAsync(int instructorId)
+        {
+            var section = await _dbContext.Sections.Include(s => s.Groups).FirstOrDefaultAsync(s => s.InstructorId == instructorId);
+            if (section == null)
+                throw new InvalidOperationException("Instructor does not have an assigned section.");
+            return section;
+        }
         public async Task<Section?> DeleteSectionAsync(int sectionId)
         {
             var section = await _dbContext.Sections.Include(s => s.Groups).ThenInclude(s => s.Students).FirstOrDefaultAsync(s => s.SectionId == sectionId);

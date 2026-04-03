@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SNRMS.Core.Services;
+using SNRMS.View;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,7 +19,7 @@ namespace SNRMS.ViewModels
         public partial string ErrorMessage { get; set; } = string.Empty;
 
         [RelayCommand]
-        private async Task LoginAsync()
+        public async Task LoginAsync()
         {
             ErrorMessage = string.Empty;
             try
@@ -31,13 +32,15 @@ namespace SNRMS.ViewModels
                 {
                     if (SessionManager.CurrentUser!.Role == "Admin")
                     {
-
+                        App.RootFrame?.Navigate(typeof(View.AdminPanelPage));
                     }
                     else if (SessionManager.CurrentUser.Role == "Instructor")
                     {
+                        App.RootFrame?.Navigate(typeof(View.InstructorDashboardPanel));
                     }
                     else if (SessionManager.CurrentUser.Role == "Student")
                     {
+                        App.RootFrame?.Navigate(typeof(View.StudentDashboardPage));
                     }
                 }
                 else

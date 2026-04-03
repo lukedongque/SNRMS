@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
 using SNRMS.Core.Models;
 using SNRMS.Core.Services;
 using System;
@@ -10,12 +11,21 @@ using System.Threading.Tasks;
 
 namespace SNRMS.ViewModels
 {
+
+
     public partial class AdminPanelViewModel : ObservableObject
     {
         private readonly SectionService _sectionService;
         private readonly InstructorService _instructorService;
         private readonly HospitalService _hospitalService;
         private readonly UserService _userService;
+        public AdminPanelViewModel()
+        {
+            _sectionService = new SectionService(App.Database);
+            _instructorService = new InstructorService(App.Database);
+            _hospitalService = new HospitalService(App.Database);
+            _userService = new UserService(App.Database);
+        }
 
         //SECTION ------------------
         [ObservableProperty]
@@ -28,46 +38,64 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial Instructor? SelectedInstructor { get; set; }
         [ObservableProperty]
-        public partial string InstructorName { get; set; } = string.Empty;
+        public partial string InstructorFirstName { get; set; } = string.Empty;
+
         [ObservableProperty]
+        public partial string InstructorLastName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string InstructorEmail { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string InstructorPassword { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string InstructorUsername { get; set; } = string.Empty;
+
         //HOSPITAL ------------------
-        public partial Hospital SelectedHospital { get; set; }
+        [ObservableProperty]
+        public partial Hospital? SelectedHospital { get; set; }
         [ObservableProperty]
         public partial string HospitalName { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string HospitalAddress { get; set; } = string.Empty;
+
+
         //STATION ------------------    
         [ObservableProperty]
         public partial string StationName { get; set; } = string.Empty;
         [ObservableProperty]
         public partial int StationCapacity { get; set; }
+
+
         //GENERAL-------------------
         [ObservableProperty]
         public partial bool IsLoading { get; set; }
         [ObservableProperty]
         public partial string ErrorMessage { get; set; } = string.Empty;
 
+
         //COLLECTIONS-------------------
-        ObservableCollection<Section> Section { get; set; } = new ObservableCollection<Section>();
-        ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
-        ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
+        [ObservableProperty]
+        public partial ObservableCollection<Section> Sections { get; set; } = new ObservableCollection<Section>();
+        [ObservableProperty]
+        public partial ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
+        [ObservableProperty]
+        public partial ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
 
         [RelayCommand]
-        private async Task LoadDataAsync()
+        public async Task LoadDataAsync()
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
             try
             {
                 var sections = await _sectionService.GetAllSectionsAsync();
-                Section.Clear();
+                Sections.Clear();
                 foreach (var section in sections)
-                    Section.Add(section);
+                    Sections.Add(section);
                 var instructors = await _instructorService.GetAllInstructorsAsync();
                 Instructors.Clear();
                 foreach (var instructor in instructors)
                     Instructors.Add(instructor);
-                var hospitals = await _hospitalService.GetAllHospital();
+                var hospitals = await _hospitalService.GetAllHospitalsAsync();
                 Hospitals.Clear();
                 foreach (var hospital in hospitals)
                     Hospitals.Add(hospital);
@@ -81,6 +109,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        [RelayCommand]
         public async Task CreateSectionAsync()
         {
             IsLoading = true;
@@ -89,7 +118,7 @@ namespace SNRMS.ViewModels
                 var createsection = await _sectionService.CreateSectionAsync(SectionName, YearLevel);
                 if (createsection != null)
                 {
-                    Section.Add(createsection);
+                    Sections.Add(createsection);
                     SectionName = string.Empty;
                     YearLevel = 0;
                 }
@@ -104,7 +133,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-
+        [RelayCommand]
         public async Task AssignInstructorToSectionAsync()
         {
             IsLoading = true;
@@ -118,10 +147,10 @@ namespace SNRMS.ViewModels
                 var updatedSection = await _sectionService.AssignInstructorAsync(SelectedSection.SectionId, SelectedInstructor.InstructorId);
                 if (updatedSection != null)
                 {
-                    var index = Section.IndexOf(SelectedSection);
+                    var index = Sections.IndexOf(SelectedSection);
                     if (index >= 0)
                     {
-                        Section[index] = updatedSection;
+                        Sections[index] = updatedSection;
                         SelectedSection = updatedSection;
                     }
                 }
@@ -136,6 +165,7 @@ namespace SNRMS.ViewModels
             }
 
         }
+        [RelayCommand]
         public async Task CreateHospitalAsync()
         {
             IsLoading = true;
@@ -158,6 +188,34 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        [RelayCommand]
+        public async Task DeleteHospitalAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                if (SelectedHospital == null)
+                {
+                    ErrorMessage = "Please select a hospital to delete.";
+                    return;
+                }
+                var deletedHospital = await _hospitalService.DeleteHospitalAsync(SelectedHospital.HospitalId);
+                if (deletedHospital != null)
+                {
+                    Hospitals.Remove(SelectedHospital);
+                    SelectedHospital = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting hospital: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
         public async Task AddStationAsync()
         {
             IsLoading = true;
@@ -190,5 +248,120 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        [RelayCommand]
+        public async Task CreateInstructorAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                var createinstructor = await _userService.CreateInstructorAsync(InstructorFirstName, InstructorLastName, InstructorEmail, InstructorUsername, InstructorPassword);
+                if (createinstructor != null)
+                {
+                    Instructors.Add(createinstructor);
+                    InstructorFirstName = string.Empty;
+                    InstructorLastName = string.Empty;
+                    InstructorEmail = string.Empty;
+                    InstructorUsername = string.Empty;
+                    InstructorPassword = string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while creating instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
+        public async Task UnassignInstructorAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                if (SelectedSection == null)
+                {
+                    ErrorMessage = "Please select a section to unassign.";
+                    return;
+                }
+                var updatedSection = await _sectionService.UnassignInstructorAsync(SelectedSection.SectionId);
+                if (updatedSection != null)
+                {
+                    var index = Sections.IndexOf(SelectedSection);
+                    if (index >= 0)
+                    {
+                        Sections[index] = updatedSection;
+                        SelectedSection = updatedSection;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while unassigning instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
+        public async Task DeactivateUserAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                if (SelectedInstructor == null)
+                {
+                    ErrorMessage = "Please select an instructor to delete.";
+                    return;
+                }
+                var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
+                if(instructorUser == null)
+                {
+                    ErrorMessage = "Associated user account not found.";
+                    return;
+                }
+                var user = await _userService.DeactivateUserAsync(instructorUser.UserId);
+                 SelectedInstructor = null;
+                
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
+        public async Task DeleteSectionAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                if (SelectedSection == null)
+                {
+                    ErrorMessage = "Please select a section to delete.";
+                    return;
+                }
+                var deletedSection = await _sectionService.DeleteSectionAsync(SelectedSection.SectionId);
+                if (deletedSection != null)
+                {
+                    Sections.Remove(SelectedSection);
+                    SelectedSection = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting section: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+       
     }
 }

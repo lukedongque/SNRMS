@@ -38,6 +38,8 @@ namespace SNRMS
         /// </summary>
         /// 
         public static AppDbContext Database { get; private set; } = null!;
+        public static Frame? RootFrame { get; private set; }
+
         public App()
         {
             InitializeComponent();
@@ -60,6 +62,7 @@ namespace SNRMS
 
 
             _window = new MainWindow();
+            RootFrame = ((MainWindow)_window).MainFrame;
             _window.Activate();
         }
     }

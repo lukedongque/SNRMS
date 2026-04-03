@@ -59,6 +59,18 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return rotationAssignment;
         }
+
+        public async Task<RotationAssignment?> GetNextRotationAssignment(int studentId)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            return await _dbContext.RotationAssignments
+                .Include(ra => ra.Station)
+                    .ThenInclude(s => s.Hospital)
+                .Include(ra => ra.Group)
+                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId))
+                .OrderBy(ra => ra.StartDate)
+                .FirstOrDefaultAsync();
+        }
         public async Task<RotationAssignment?> GetCurrentRotationAssignmentAsync(int studentId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);

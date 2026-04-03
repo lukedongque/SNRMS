@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace SNRMS.Core.Data
 {
@@ -10,8 +12,13 @@ namespace SNRMS.Core.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            var config = new ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .Build();
+            string connectionString = config.GetConnectionString("DefaultConnection");  
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseMySql("Server=localhost;Database=SNRMS;User=root;Password=Dongque123", ServerVersion.AutoDetect("Server=localhost;Database=SNRMS;User=root;Password=Dongque123"));
+            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
             return new AppDbContext(optionsBuilder.Options);
 
         }

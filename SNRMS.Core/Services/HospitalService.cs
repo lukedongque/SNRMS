@@ -51,11 +51,17 @@ namespace SNRMS.Core.Services
             return station;
         }
 
-        public async Task<List<Hospital>> GetAllHospital()
+        public async Task<List<Hospital>> GetAllHospitalsAsync()
         {
             return await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).ToListAsync();
         }
-
+        public async Task<List<Station>> GetAllStationsByHospitalIdAsync(int hospitalId)
+        {
+            var hospital = await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).FirstOrDefaultAsync(h => h.HospitalId == hospitalId);
+            if (hospital == null)
+                throw new InvalidOperationException("Hospital not found.");
+            return hospital.Stations.ToList();
+        }
         public async Task<Hospital?> DeleteHospitalAsync(int hospitalId)
         {
             var hospital = await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).FirstOrDefaultAsync(h => h.HospitalId == hospitalId);
