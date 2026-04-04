@@ -12,7 +12,6 @@ namespace SNRMS.Core.Models
         public string Role { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
 
-
         public int? StudentId { get; set; }
         public int? InstructorId { get; set; }
 

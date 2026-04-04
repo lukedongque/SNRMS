@@ -28,7 +28,10 @@ namespace SNRMS.Core.Services
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) return null;
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
-            if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            if (user == null || user.Username != username)
+                return null;
+
+            if (BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
 
                 SessionManager.Login(user); 

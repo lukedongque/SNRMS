@@ -33,7 +33,7 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial string SectionName { get; set; } = string.Empty;
         [ObservableProperty]
-        public partial int YearLevel { get; set; }
+        public partial string YearLevel { get; set; }
         //INSTRUCTOR ------------------
         [ObservableProperty]
         public partial Instructor? SelectedInstructor { get; set; }
@@ -70,20 +70,28 @@ namespace SNRMS.ViewModels
         public partial bool IsLoading { get; set; }
         [ObservableProperty]
         public partial string ErrorMessage { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string SuccessMessage { get; set; } = string.Empty;
 
 
-        //COLLECTIONS-------------------
+        //COLLECTIONS / LISTS -------------------
         [ObservableProperty]
         public partial ObservableCollection<Section> Sections { get; set; } = new ObservableCollection<Section>();
         [ObservableProperty]
         public partial ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
         [ObservableProperty]
         public partial ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
+        public List<string> YearLevelsList { get; } = new List<string> { "1", "2", "3", "4" };
+        public List<string> SectionsList { get; } = new List<string>
+        {
+                "Section A", "Section B", "Section C", "Section D", "Section E"
+        };
 
         [RelayCommand]
         public async Task LoadDataAsync()
         {
             IsLoading = true;
+            SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
             try
             {
@@ -112,17 +120,24 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task CreateSectionAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
-                var createsection = await _sectionService.CreateSectionAsync(SectionName, YearLevel);
+                if (int.TryParse(YearLevel, out int yearlevel) == false || yearlevel > 4 || yearlevel < 1)
+                {
+                    ErrorMessage = "Please input a valid numerical value (1 - 4).";
+                    return;
+                }
+                var createsection = await _sectionService.CreateSectionAsync(SectionName, int.Parse(YearLevel));
                 if (createsection != null)
                 {
                     Sections.Add(createsection);
                     SectionName = string.Empty;
-                    YearLevel = 0;
+                    YearLevel = "";
                 }
-
+                SuccessMessage = "Section created successfully.";
             }
             catch (Exception ex)
             {
@@ -134,8 +149,41 @@ namespace SNRMS.ViewModels
             }
         }
         [RelayCommand]
+        public async Task DeleteSectionAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedSection == null)
+                {
+                    ErrorMessage = "Please select a section to delete.";
+                    return;
+                }
+                var deletedSection = await _sectionService.DeleteSectionAsync(SelectedSection.SectionId);
+                if (deletedSection != null)
+                {
+                    Sections.Remove(SelectedSection);
+                    SelectedSection = null;
+                }
+                SuccessMessage = "Section deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting section: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
         public async Task AssignInstructorToSectionAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -154,6 +202,7 @@ namespace SNRMS.ViewModels
                         SelectedSection = updatedSection;
                     }
                 }
+                SuccessMessage = "Instructor assigned successfully.";
             }
             catch (Exception ex)
             {
@@ -168,6 +217,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task CreateHospitalAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -178,6 +229,7 @@ namespace SNRMS.ViewModels
                     HospitalName = string.Empty;
                     HospitalAddress = string.Empty;
                 }
+                SuccessMessage = "Hospital created successfully.";
             }
             catch (Exception ex)
             {
@@ -191,6 +243,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task DeleteHospitalAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -205,6 +259,7 @@ namespace SNRMS.ViewModels
                     Hospitals.Remove(SelectedHospital);
                     SelectedHospital = null;
                 }
+                SuccessMessage = "Hospital deleted successfully.";
             }
             catch (Exception ex)
             {
@@ -215,9 +270,12 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+
         [RelayCommand]
         public async Task AddStationAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -238,6 +296,7 @@ namespace SNRMS.ViewModels
                     StationName = string.Empty;
                     StationCapacity = 0;
                 }
+                SuccessMessage = "Station added successfully.";
             }
             catch (Exception ex)
             {
@@ -251,6 +310,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task CreateInstructorAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -264,6 +325,7 @@ namespace SNRMS.ViewModels
                     InstructorUsername = string.Empty;
                     InstructorPassword = string.Empty;
                 }
+                SuccessMessage = "Instructor created successfully.";
             }
             catch (Exception ex)
             {
@@ -277,6 +339,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task UnassignInstructorAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -295,6 +359,7 @@ namespace SNRMS.ViewModels
                         SelectedSection = updatedSection;
                     }
                 }
+                SuccessMessage = "Instructor unassigned successfully.";
             }
             catch (Exception ex)
             {
@@ -308,6 +373,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task DeactivateUserAsync()
         {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -323,8 +390,10 @@ namespace SNRMS.ViewModels
                     return;
                 }
                 var user = await _userService.DeactivateUserAsync(instructorUser.UserId);
-                 SelectedInstructor = null;
-                
+                SelectedInstructor = null;
+
+                SuccessMessage = "Instructor deactivated successfully.";
+
             }
             catch (Exception ex)
             {
@@ -335,33 +404,6 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task DeleteSectionAsync()
-        {
-            IsLoading = true;
-            try
-            {
-                if (SelectedSection == null)
-                {
-                    ErrorMessage = "Please select a section to delete.";
-                    return;
-                }
-                var deletedSection = await _sectionService.DeleteSectionAsync(SelectedSection.SectionId);
-                if (deletedSection != null)
-                {
-                    Sections.Remove(SelectedSection);
-                    SelectedSection = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred while deleting section: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-       
+        
     }
 }

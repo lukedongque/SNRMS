@@ -36,12 +36,19 @@ namespace SNRMS.Core.Services
             var section = await _dbContext.Sections.FindAsync(sectionId);
             if (section == null)
                 throw new InvalidOperationException("Section not found.");
+
             var instructor = await _dbContext.Instructors.FindAsync(instructorId);
             if (instructor == null)
                 throw new InvalidOperationException("Instructor not found.");
+
+            var instructorUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.InstructorId == instructorId);
+            if (!instructorUser!.IsActive)
+                throw new InvalidOperationException("Instructor account is inactive.");
+
             var alreadyAssignedSection = await _dbContext.Sections.FirstOrDefaultAsync(s => s.InstructorId == instructorId);
             if (alreadyAssignedSection != null)
                 throw new InvalidOperationException("Instructor is already assigned to another section. Unassign them first.");
+
             section.InstructorId = instructorId;
             await _dbContext.SaveChangesAsync();
             return section;
@@ -80,6 +87,9 @@ namespace SNRMS.Core.Services
             var section = await _dbContext.Sections.Include(s => s.Groups).ThenInclude(s => s.Students).FirstOrDefaultAsync(s => s.SectionId == sectionId);
             if (section == null)
                 throw new InvalidOperationException("Section not found.");
+            var hasInstructor = await _dbContext.Sections.AnyAsync(s => s.SectionId == sectionId && s.InstructorId != null);
+            if (hasInstructor)
+                throw new InvalidOperationException("Cannot delete section with an assigned instructor. Unassign the instructor first.");
             section.Groups.SelectMany(g => g.Students).ToList().ForEach(s => s.GroupId = null); 
             _dbContext.Groups.RemoveRange(section.Groups); 
             _dbContext.Sections.Remove(section);

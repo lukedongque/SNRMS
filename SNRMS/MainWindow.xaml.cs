@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI.Composition.SystemBackdrops;
+using Microsoft.Graphics;
 using SNRMS.View;
 
 // To learn more about WinUI, the WinUI project structure,
