@@ -81,6 +81,8 @@ namespace SNRMS.ViewModels
         public partial ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
         [ObservableProperty]
         public partial ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
+        [ObservableProperty]
+        public partial ObservableCollection<Instructor> ActiveInstructors { get; set; } = new ObservableCollection<Instructor>();
         public List<string> YearLevelsList { get; } = new List<string> { "1", "2", "3", "4" };
         public List<string> SectionsList { get; } = new List<string>
         {
@@ -103,6 +105,12 @@ namespace SNRMS.ViewModels
                 Instructors.Clear();
                 foreach (var instructor in instructors)
                     Instructors.Add(instructor);
+                foreach(var instructor in instructors)
+                {
+                    var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == instructor.InstructorId);
+                    if (instructorUser != null && instructorUser.IsActive)
+                        ActiveInstructors.Add(instructor);
+                }
                 var hospitals = await _hospitalService.GetAllHospitalsAsync();
                 Hospitals.Clear();
                 foreach (var hospital in hospitals)

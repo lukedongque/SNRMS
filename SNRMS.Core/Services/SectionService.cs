@@ -19,7 +19,10 @@ namespace SNRMS.Core.Services
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Section name is required.");
-            
+            var exists = await _dbContext.Sections.AnyAsync(s => s.SectionName == name && s.YearLevel == yearlevel);
+            if (exists)
+                throw new InvalidOperationException("A section with the same name and year level already exists.");
+
             var section = new Section
             {
                 SectionName = name,
@@ -48,7 +51,9 @@ namespace SNRMS.Core.Services
             var alreadyAssignedSection = await _dbContext.Sections.FirstOrDefaultAsync(s => s.InstructorId == instructorId);
             if (alreadyAssignedSection != null)
                 throw new InvalidOperationException("Instructor is already assigned to another section. Unassign them first.");
-
+            var hasInstructorAlready = await _dbContext.Sections.AnyAsync(s => s.SectionId == sectionId && s.InstructorId != null);
+                if(hasInstructorAlready)
+                    throw new InvalidOperationException("Section has an instructor already. Please unassign the assigned instructor first.");
             section.InstructorId = instructorId;
             await _dbContext.SaveChangesAsync();
             return section;
