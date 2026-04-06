@@ -34,8 +34,10 @@ namespace SNRMS.Core.Services
 
         public async Task<List<Instructor>> GetAllInstructorsAsync()
         {
-            var instructorsList = await _dbContext.Instructors.ToListAsync();
-            if(instructorsList.Count == 0)
+            var instructorsList = await _dbContext.Instructors
+                .Include(i => i.User)
+                .ToListAsync();
+            if (instructorsList.Count == 0)
                 throw new InvalidOperationException("No instructors found in the system.");
             return instructorsList;
         }

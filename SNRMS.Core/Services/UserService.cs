@@ -15,29 +15,29 @@ namespace SNRMS.Core.Services
             _dbContext = dbContext;
         }
 
-        public async Task<Instructor?> CreateInstructorAsync(string firstname, string lastname, string email, string username, string password)
+        public async Task<Instructor?> CreateInstructorAsync(string firstname, string lastname, string email, string employeeId)
         {
             if (string.IsNullOrEmpty(firstname) ||
                 string.IsNullOrEmpty(lastname) ||
                 string.IsNullOrEmpty(email) ||
-                string.IsNullOrEmpty(username) ||
-                string.IsNullOrEmpty(password))
+                string.IsNullOrEmpty(employeeId))
                 throw new ArgumentException("All fields are required.");
-            var existingUser = await _dbContext.Users.AnyAsync(u => u.Username == username);
+            var existingUser = await _dbContext.Users.AnyAsync(u => u.Username == employeeId);
             if (existingUser)
                 throw new InvalidOperationException("Username already exists.");
             var instructor = new Instructor
             {
                 FirstName = firstname,
                 LastName = lastname,
-                Email = email
+                Email = email,
+                EmployeeId = employeeId
             };
             _dbContext.Instructors.Add(instructor);
             _dbContext.Users.Add(new User
             {
-                Username = username,
+                Username = employeeId,
                 Role = "Instructor",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("user123"),
                 Instructor = instructor
             });
             await _dbContext.SaveChangesAsync();
@@ -59,17 +59,22 @@ namespace SNRMS.Core.Services
 
         public async Task<User?> DeactivateUserAsync(int userId)
         {
+            var section = await _dbContext.Sections
+                .Include(s => s.Instructor)
+                .FirstOrDefaultAsync(s => s.Instructor!.User!.UserId==userId);
             var user = await _dbContext.Users.FindAsync(userId);
             if (user == null)
                 throw new InvalidOperationException("User not found.");
             if(!user.IsActive)
                 throw new InvalidOperationException("User is already inactive.");
+            if(user.IsActive && section != null)
+                throw new InvalidOperationException("Cannot deactivate user assigned to a section.");
             user.IsActive = false;
             await _dbContext.SaveChangesAsync();
             return user;
         }
 
-        public async Task<User?> ReActivateUserAsync(int userId)
+        public async Task<User?> ReactivateUserAsync(int userId)
         {
             var user = await _dbContext.Users.FindAsync(userId);
             if (user == null)
@@ -78,38 +83,8 @@ namespace SNRMS.Core.Services
                 throw new InvalidOperationException("User is already active.");
             user.IsActive = true;
             await _dbContext.SaveChangesAsync();
+          
             return user;
         }
-        public async Task<List<Instructor>> ImportInstructorsFromExcelAsync(string filePath)
-        {
-            var createdInstructors = new List<Instructor>();
-            var workbook = new XLWorkbook(filePath);
-            var worksheet = workbook.Worksheet(1);
-            var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
-
-            foreach (var row in rows)
-            {
-                var firstName = row.Cell(1).GetString().Trim();
-                var lastName = row.Cell(2).GetString().Trim();
-                var email = row.Cell(3).GetString().Trim();
-                var employeeId = row.Cell(4).GetString().Trim();
-
-                if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(employeeId))
-                    continue;
-
-                try
-                {
-                    var instructor = await CreateInstructorAsync(
-                        firstName, lastName, email, employeeId, "user123");
-                    if (instructor != null)
-                        createdInstructors.Add(instructor);
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-            return createdInstructors;
         }
-    }
 }

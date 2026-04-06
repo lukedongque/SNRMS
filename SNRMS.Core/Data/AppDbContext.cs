@@ -41,7 +41,12 @@ namespace SNRMS.Core.Data
                 .WithMany()
                 .HasForeignKey(s => s.InstructorId); ;
 
-            
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Instructor)
+                .WithOne(i => i.User)
+                .HasForeignKey<User>(u => u.InstructorId);
+
+
         }
     }
 }

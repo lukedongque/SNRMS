@@ -12,5 +12,9 @@ namespace SNRMS.Core.Models
         public string Email { get; set; } = string.Empty;
         public string EmployeeId { get; set; } = string.Empty;
 
+        public User?  User { get; set; }
+        public string StatusText => User?.IsActive == true ? "Active" : "Inactive";
+
+
     }
 }

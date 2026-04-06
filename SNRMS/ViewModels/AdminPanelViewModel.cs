@@ -37,7 +37,7 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial string SectionName { get; set; } = string.Empty;
         [ObservableProperty]
-        public partial string YearLevel { get; set; }
+        public partial string YearLevel { get; set; } = string.Empty;
         //INSTRUCTOR ------------------
         [ObservableProperty]
         public partial Instructor? SelectedInstructor { get; set; }
@@ -49,9 +49,7 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial string InstructorEmail { get; set; } = string.Empty;
         [ObservableProperty]
-        public partial string InstructorPassword { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string InstructorUsername { get; set; } = string.Empty;
+        public partial string InstructorEmployeeId { get; set; } = string.Empty;    
 
         //HOSPITAL ------------------
         [ObservableProperty]
@@ -109,6 +107,7 @@ namespace SNRMS.ViewModels
                     Sections.Add(section);
                 var instructors = await _instructorService.GetAllInstructorsAsync();
                 Instructors.Clear();
+                ActiveInstructors.Clear();
                 foreach (var instructor in instructors)
                     Instructors.Add(instructor);
                 foreach(var instructor in instructors)
@@ -329,15 +328,14 @@ namespace SNRMS.ViewModels
             IsLoading = true;
             try
             {
-                var createinstructor = await _userService.CreateInstructorAsync(InstructorFirstName, InstructorLastName, InstructorEmail, InstructorUsername, InstructorPassword);
+                var createinstructor = await _userService.CreateInstructorAsync(InstructorFirstName, InstructorLastName, InstructorEmail, InstructorEmployeeId);
                 if (createinstructor != null)
                 {
                     Instructors.Add(createinstructor);
                     InstructorFirstName = string.Empty;
                     InstructorLastName = string.Empty;
                     InstructorEmail = string.Empty;
-                    InstructorUsername = string.Empty;
-                    InstructorPassword = string.Empty;
+                    InstructorEmployeeId = string.Empty;
                 }
                 SuccessMessage = "Instructor created successfully.";
             }
@@ -394,7 +392,7 @@ namespace SNRMS.ViewModels
             {
                 if (SelectedInstructor == null)
                 {
-                    ErrorMessage = "Please select an instructor to delete.";
+                    ErrorMessage = "Please select an instructor to deactivate.";
                     return;
                 }
                 var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
@@ -406,7 +404,45 @@ namespace SNRMS.ViewModels
                 var user = await _userService.DeactivateUserAsync(instructorUser.UserId);
                 SelectedInstructor = null;
 
+               
                 SuccessMessage = "Instructor deactivated successfully.";
+                await LoadDataAsync();
+
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task ReactivateUserAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedInstructor == null)
+                {
+                    ErrorMessage = "Please select an instructor to reactivate.";
+                    return;
+                }
+                var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
+                if (instructorUser == null)
+                {
+                    ErrorMessage = "Associated user account not found.";
+                    return;
+                }
+                var user = await _userService.ReactivateUserAsync(instructorUser.UserId);
+                SelectedInstructor = null;
+
+                SuccessMessage = "Instructor reactivated successfully.";
+                                await LoadDataAsync();
 
             }
             catch (Exception ex)
@@ -456,6 +492,7 @@ namespace SNRMS.ViewModels
                 Hospitals.Add(hospital);
         }
 
+        
 
 
     }
