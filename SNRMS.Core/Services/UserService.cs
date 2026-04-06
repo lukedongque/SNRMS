@@ -1,9 +1,10 @@
-﻿using SNRMS.Core.Data;
+﻿using ClosedXML.Excel;
+using Microsoft.EntityFrameworkCore;
+using SNRMS.Core.Data;
+using SNRMS.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using SNRMS.Core.Models;
-using Microsoft.EntityFrameworkCore;
 namespace SNRMS.Core.Services
 {
     public class UserService
@@ -78,6 +79,37 @@ namespace SNRMS.Core.Services
             user.IsActive = true;
             await _dbContext.SaveChangesAsync();
             return user;
+        }
+        public async Task<List<Instructor>> ImportInstructorsFromExcelAsync(string filePath)
+        {
+            var createdInstructors = new List<Instructor>();
+            var workbook = new XLWorkbook(filePath);
+            var worksheet = workbook.Worksheet(1);
+            var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+
+            foreach (var row in rows)
+            {
+                var firstName = row.Cell(1).GetString().Trim();
+                var lastName = row.Cell(2).GetString().Trim();
+                var email = row.Cell(3).GetString().Trim();
+                var employeeId = row.Cell(4).GetString().Trim();
+
+                if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(employeeId))
+                    continue;
+
+                try
+                {
+                    var instructor = await CreateInstructorAsync(
+                        firstName, lastName, email, employeeId, "user123");
+                    if (instructor != null)
+                        createdInstructors.Add(instructor);
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            return createdInstructors;
         }
     }
 }

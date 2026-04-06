@@ -1,9 +1,10 @@
-﻿using SNRMS.Core.Data;
+﻿using ClosedXML.Excel;
+using Microsoft.EntityFrameworkCore;
+using SNRMS.Core.Data;
+using SNRMS.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using SNRMS.Core.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace SNRMS.Core.Services
 {
@@ -74,6 +75,34 @@ namespace SNRMS.Core.Services
             _dbContext.Hospitals.Remove(hospital);
             await _dbContext.SaveChangesAsync();
             return hospital;
+        }
+        public async Task<List<Hospital>> ImportHospitalsFromExcelAsync(string filePath)
+        {
+            var createdHospitals = new List<Hospital>();
+            var workbook = new XLWorkbook(filePath);
+            var worksheet = workbook.Worksheet(1);
+            var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+
+            foreach (var row in rows)
+            {
+                var hospitalName = row.Cell(1).GetString().Trim();
+                var address = row.Cell(2).GetString().Trim();
+
+                if (string.IsNullOrEmpty(hospitalName))
+                    continue;
+
+                try
+                {
+                    var hospital = await CreateHospitalAsync(hospitalName, address);
+                    if (hospital != null)
+                        createdHospitals.Add(hospital);
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            return createdHospitals;
         }
     }
 }

@@ -1,13 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Windows.Storage.Pickers;
 using SNRMS.Core.Models;
 using SNRMS.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WinRT.Interop;
 
 namespace SNRMS.ViewModels
 {
@@ -72,6 +76,8 @@ namespace SNRMS.ViewModels
         public partial string ErrorMessage { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string SuccessMessage { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string SelectedSort { get; set; } = string.Empty;
 
 
         //COLLECTIONS / LISTS -------------------
@@ -88,7 +94,7 @@ namespace SNRMS.ViewModels
         {
                 "Section A", "Section B", "Section C", "Section D", "Section E"
         };
-
+        public List<string> SortChoicesList { get; } = new List<string> { "Name", "Year Level" };
         [RelayCommand]
         public async Task LoadDataAsync()
         {
@@ -412,6 +418,45 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        
+
+        [RelayCommand]
+        public void SortSections()
+        {
+            if (SelectedSort == "Name")
+            {
+                var sorted = Sections.OrderBy(s => s.SectionName).ToList();
+                Sections.Clear();
+                foreach (var section in sorted)
+                    Sections.Add(section);
+            }
+            else if (SelectedSort == "Year Level")
+            {
+                var sorted = Sections.OrderBy(s => s.YearLevel).ToList();
+                Sections.Clear();
+                foreach (var section in sorted)
+                    Sections.Add(section);
+            }
+
+        }
+        [RelayCommand]
+        public void SortInstructorsByLastName()
+        {
+            var sorted = Instructors.OrderBy(i => i.LastName).ToList();
+            Instructors.Clear();
+            foreach (var instructor in sorted)
+                Instructors.Add(instructor);
+        }
+
+        [RelayCommand]
+        public void SortHospitalsByName()
+        {
+            var sorted = Hospitals.OrderBy(h => h.HospitalName).ToList();
+            Hospitals.Clear();
+            foreach (var hospital in sorted)
+                Hospitals.Add(hospital);
+        }
+
+
+
     }
 }

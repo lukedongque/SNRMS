@@ -61,8 +61,21 @@
                     <Border Background="White" CornerRadius="12" Padding="20"
                             BorderBrush="#E2E8F0" BorderThickness="1">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="All Sections" FontWeight="SemiBold" 
-                                       Foreground="#2D3748" FontSize="16"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="All Sections"  VerticalAlignment="Center" FontWeight="SemiBold" 
+                                        Foreground="#2D3748" FontSize="16" Margin="0,0,50,0"/>
+                                <TextBlock Text="Sort By:" VerticalAlignment="Center" FontWeight="SemiBold" 
+                                           Foreground="#2D3748" FontSize="12" Margin="0,0,15,0"/>
+                                <ComboBox FontSize="12" Height="28" VerticalAlignment="Bottom"
+                                          ItemsSource="{Binding SortChoicesList}"
+                                          SelectedItem="{Binding SelectedSort, Mode=TwoWay}"
+                                          Width="110" Margin="0,0,8,0">
+                                </ComboBox>
+                                <Button FontSize="12" Content="Sort" VerticalAlignment="Bottom" Height="28"
+                                        Command="{Binding SortSectionsCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>          
+
+                            </StackPanel>
                             <ListView ItemsSource="{Binding Sections}"
                                       SelectedItem="{Binding SelectedSection, Mode=TwoWay}"
                                       Height="250">
