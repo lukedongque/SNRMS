@@ -66,7 +66,7 @@ namespace SNRMS.Core.Services
             var group = await _dbContext.Groups.FindAsync(groupId);
             if (group == null)
                 throw new ArgumentException("Group not found");
-            return await _dbContext.Students.Where(s => s.GroupId == groupId).ToListAsync();
+            return await _dbContext.Students.AsNoTracking().Where(s => s.GroupId == groupId).ToListAsync();
         }
 
         public async Task<Student?> GetStudentByIdAsync(int studentId) //get student by id
@@ -92,9 +92,9 @@ namespace SNRMS.Core.Services
             return student;
         }
 
-        public async Task<List<Student>> CreateBulkAccountStudentAsync(List<Student>student)// create bulk student accounts
+        public async Task<List<Student>> CreateBulkAccountStudentAsync(List<Student> student)// create bulk student accounts
         {
-           foreach(var s in student)
+            foreach (var s in student)
             {
                 if (string.IsNullOrEmpty(s.FirstName) ||
                     string.IsNullOrEmpty(s.LastName) ||
@@ -105,18 +105,23 @@ namespace SNRMS.Core.Services
 
 
             var createdStudents = new List<Student>();
-            foreach(var s in student)
+            foreach (var s in student)
             {
                 var newstudent = await CreateStudentAsync(
                     s.FirstName,
                     s.LastName,
                     s.Email,
                     s.StudentNumber);
-                if(newstudent!=null)
+                if (newstudent != null)
                     createdStudents.Add(newstudent);
 
             }
             return createdStudents;
+        }
+
+        public async Task<List<Student>> GetAllStudentsAsync() //get all students
+        {
+            return await _dbContext.Students.AsNoTracking().Include(s => s.Group).ToListAsync();
         }
     }
 }

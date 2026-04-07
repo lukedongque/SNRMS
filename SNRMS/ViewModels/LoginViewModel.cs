@@ -36,7 +36,7 @@ namespace SNRMS.ViewModels
                     }
                     else if (SessionManager.CurrentUser.Role == "Instructor")
                     {
-                        App.RootFrame?.Navigate(typeof(View.InstructorDashboardPanel));
+                        App.RootFrame?.Navigate(typeof(View.InstructorDashboardPage));
                     }
                     else if (SessionManager.CurrentUser.Role == "Student")
                     {

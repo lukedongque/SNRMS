@@ -1,14 +1,308 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="SNRMS.View.InstructorDashboardPanel"
+    x:Class="SNRMS.View.InstructorDashboardPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:SNRMS.View"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:viewmodels="using:SNRMS.ViewModels">
 
-    <Grid>
+    <Page.DataContext>
+        <viewmodels:InstructorDashboardViewModel />
+    </Page.DataContext>
 
+    <Grid Background="#F0F4F8">
+        <NavigationView x:Name="NavView"
+                        SelectionChanged="NavView_SelectionChanged"
+                        PaneTitle="Instructor Dashboard"
+                        IsBackButtonVisible="Collapsed"
+                        Background="#F0F4F8">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Groups" Tag="Groups" Icon="People"/>
+                <NavigationViewItem Content="Students" Tag="Students" Icon="Contact"/>
+                <NavigationViewItem Content="Rotations" Tag="Rotations" Icon="Calendar"/>
+            </NavigationView.MenuItems>
+
+            <Grid Padding="32">
+
+                <!-- GROUPS PANEL -->
+                <StackPanel x:Name="GroupsPanel" Visibility="Collapsed" Spacing="20">
+                    <TextBlock Text="Groups" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+
+                    <!-- Create Group Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Create New Group" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBox Header="Group Name" 
+                                         Text="{Binding GroupName, Mode=TwoWay}"
+                                         Width="200" PlaceholderText="e.g. Group 1"/>
+                                <Button Content="Create Group" VerticalAlignment="Bottom"
+                                        Command="{Binding CreateGroupCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Groups List Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="All Groups" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+                            <ListView ItemsSource="{Binding Groups}"
+                                      SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                                      Height="250">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" 
+                                                       Text="{Binding GroupName}" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding Students.Count, Mode=OneWay}" 
+                                                       FontSize="12" 
+                                                       Foreground="#718096"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <Button Content="Delete Group" 
+                                    Command="{Binding DeleteGroupCommand}"
+                                    Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- STUDENTS PANEL -->
+                <StackPanel x:Name="StudentsPanel" Visibility="Collapsed" Spacing="20">
+                    <TextBlock Text="Students" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+
+                    <!-- Create Student Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Add New Student" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBox Header="First Name" 
+                                         Text="{Binding StudentFirstName, Mode=TwoWay}"
+                                         Width="150" PlaceholderText="First Name"/>
+                                <TextBox Header="Last Name" 
+                                         Text="{Binding StudentLastName, Mode=TwoWay}"
+                                         Width="150" PlaceholderText="Last Name"/>
+                                <TextBox Header="Email" 
+                                         Text="{Binding StudentEmail, Mode=TwoWay}"
+                                         Width="200" PlaceholderText="email@school.com"/>
+                                <TextBox Header="Student Number" 
+                                         Text="{Binding StudentNumber, Mode=TwoWay}"
+                                         Width="150" PlaceholderText="e.g. 2021-0001"/>
+                                <Button Content="Add Student" VerticalAlignment="Bottom"
+                                        Command="{Binding CreateStudentCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Students List Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Students" FontWeight="SemiBold" 
+                                           VerticalAlignment="Center" Foreground="#2D3748" FontSize="16"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    
+                                    <ComboBox Header="Filter by Group"
+                                              ItemsSource="{Binding Groups}"
+                                              SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                                              PlaceholderText="All Groups"
+                                              Width="150" Margin="16,0,0,0">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding GroupName}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                <Button Content="Show All" VerticalAlignment="Bottom"
+                                            Command="{Binding LoadAllStudentsCommand}"
+                                            Background="#E2E8F0" Foreground="#2D3748" CornerRadius="6"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <ListView ItemsSource="{Binding Students}"
+                                      SelectedItem="{Binding SelectedStudent, Mode=TwoWay}"
+                                      Height="250">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" 
+                                                       Text="{Binding LastName}" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding FirstName}" 
+                                                       Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" 
+                                                       Text="{Binding StudentNumber}" 
+                                                       FontSize="12"
+                                                       Foreground="#718096"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" 
+                                                       Text="{Binding Group.GroupName}" 
+                                                       FontSize="12"
+                                                       Foreground="#2B9ED4"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Delete Student" 
+                                        Command="{Binding DeleteStudentCommand}"
+                                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                                <ComboBox Header="Transfer to Group"
+                                          ItemsSource="{Binding Groups}"
+                                          SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                                          Width="150">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding GroupName}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Content="Transfer" VerticalAlignment="Bottom"
+                                        Command="{Binding TransferStudentCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ROTATIONS PANEL -->
+                <StackPanel x:Name="RotationsPanel" Visibility="Collapsed" Spacing="20">
+                    <TextBlock Text="Rotation Assignments" FontSize="28" FontWeight="Bold" 
+                               Foreground="#1B3A6B"/>
+
+                    <!-- Create Rotation Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Create Rotation Assignment" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ComboBox Header="Group"
+                                          ItemsSource="{Binding Groups}"
+                                          SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                                          Width="150">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding GroupName}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <ComboBox Header="Station"
+                                          ItemsSource="{Binding Stations}"
+                                          SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                                          Width="150">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding StationName}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <ComboBox Header="Day Slot"
+                                          SelectedItem="{Binding DaySlot, Mode=TwoWay}"
+                                          Width="120">
+                                    <ComboBoxItem Content="Mon-Tue"/>
+                                    <ComboBoxItem Content="Wed-Thu"/>
+                                    <ComboBoxItem Content="Fri-Sat"/>
+                                </ComboBox>
+                                <DatePicker Header="Start Date" 
+                                            Date="{Binding RotationStartDate, Mode=TwoWay}"/>
+                                <DatePicker Header="End Date" 
+                                            Date="{Binding RotationEndDate, Mode=TwoWay}"/>
+                                <Button Content="Create" VerticalAlignment="Bottom"
+                                        Command="{Binding CreateRotationAssignmentCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Rotation List Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="All Rotation Assignments" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+                            <ListView ItemsSource="{Binding RotationAssignments}"
+                                      SelectedItem="{Binding SelectedRotationAssignment, Mode=TwoWay}"
+                                      Height="250">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" 
+                                                       Text="{Binding Group.GroupName}" 
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding Station.StationName}" 
+                                                       Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" 
+                                                       Text="{Binding DaySlot}" 
+                                                       FontSize="12"
+                                                       Foreground="#718096"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" 
+                                                       Text="{Binding StartDate}" 
+                                                       FontSize="12"
+                                                       Foreground="#718096"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" 
+                                                       Text="{Binding EndDate}" 
+                                                       FontSize="12"
+                                                       Foreground="#718096"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <Button Content="Delete Assignment" 
+                                    Command="{Binding DeleteRotationAssignmentCommand}"
+                                    Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Messages -->
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#E53E3E" 
+                           VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+
+            </Grid>
+        </NavigationView>
     </Grid>
 </Page>

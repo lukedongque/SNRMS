@@ -74,12 +74,12 @@ namespace SNRMS.Core.Services
         public async Task<List<Section>> GetAllSectionsAsync()
         {
 
-            return await _dbContext.Sections.Include(s => s.Instructor).Include(s => s.Groups).ToListAsync();
+            return await _dbContext.Sections.AsNoTracking().Include(s => s.Instructor).Include(s => s.Groups).ToListAsync();
         }
 
         public async Task<List<Section>> GetSectionsByYearLevelAsync(int yearLevel)
         {
-            return await _dbContext.Sections.Include(s => s.Instructor).Include(s => s.Groups).Where(s => s.YearLevel == yearLevel).ToListAsync();
+            return await _dbContext.Sections.AsNoTracking().Include(s => s.Instructor).Include(s => s.Groups).Where(s => s.YearLevel == yearLevel).ToListAsync();
         }
         public async Task<Section> GetInstructorSectionAsync(int instructorId)
         {

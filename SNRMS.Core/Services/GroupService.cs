@@ -19,6 +19,9 @@ namespace SNRMS.Core.Services
         {
             if (string.IsNullOrEmpty(groupName))
                 throw new ArgumentException("Group name is required.");
+            var hasGroup = await _dbContext.Groups.AnyAsync(g => g.GroupName == groupName && g.SectionId == sectionId);
+            if (hasGroup)
+                throw new InvalidOperationException("Group name already exists in this section.");
             var section = await _dbContext.Sections.FindAsync(sectionId);
             if (section == null)
                 throw new InvalidOperationException("Section not found.");
@@ -37,14 +40,23 @@ namespace SNRMS.Core.Services
             var section = await _dbContext.Sections.FindAsync(sectionId);
             if (section == null)
                 throw new InvalidOperationException("Section not found.");
-            return await _dbContext.Groups.Include(g => g.Students).Where(g => g.SectionId == sectionId).ToListAsync();
+            return await _dbContext.Groups.AsNoTracking().Include(g => g.Students).Where(g => g.SectionId == sectionId).ToListAsync();
         }
-
+        public async Task<Group?> GetGroupByIdAsync(int groupId)
+        {
+            var group = await _dbContext.Groups.AsNoTracking().Include(g => g.Students).FirstOrDefaultAsync(g => g.GroupId == groupId);
+            if (group == null)
+                throw new InvalidOperationException("Group not found.");
+            return group;
+        }
         public async Task<Group?> DeleteGroupAsync(int groupId)
         {
             var group = await _dbContext.Groups.Include(g => g.Students).Include(g => g.RotationAssignments).FirstOrDefaultAsync(g => g.GroupId == groupId);
             if (group == null)
                 throw new InvalidOperationException("Group not found.");
+            bool hasStudents = group.Students.Any();
+            if (hasStudents)
+                throw new InvalidOperationException("Cannot delete group with students.");
             bool hasAssignment = group.RotationAssignments.Any();
             if (hasAssignment)
                 throw new InvalidOperationException("Cannot delete group with existing rotation assignments.");

@@ -22,9 +22,9 @@ namespace SNRMS.Core.Services
                 string.IsNullOrEmpty(email) ||
                 string.IsNullOrEmpty(employeeId))
                 throw new ArgumentException("All fields are required.");
-            var existingUser = await _dbContext.Users.AnyAsync(u => u.Username == employeeId);
-            if (existingUser)
-                throw new InvalidOperationException("Username already exists.");
+            var existingEmployeeId = await _dbContext.Instructors.AnyAsync(i => i.EmployeeId == employeeId);
+            if (existingEmployeeId)
+                throw new InvalidOperationException("Employee ID already exists");
             var instructor = new Instructor
             {
                 FirstName = firstname,

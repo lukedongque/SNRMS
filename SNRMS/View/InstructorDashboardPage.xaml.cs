@@ -1,31 +1,43 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
+using SNRMS.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace SNRMS.View
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class InstructorDashboardPanel : Page
+    public sealed partial class InstructorDashboardPage : Page
     {
-        public InstructorDashboardPanel()
+        public InstructorDashboardPage()
         {
             InitializeComponent();
+            var vm = (InstructorDashboardViewModel)DataContext;
+            _ = vm.LoadDataAsync();
+          
+            GroupsPanel.Visibility = Visibility.Visible;
+        }   
+
+        private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            var vm = (InstructorDashboardViewModel)DataContext;
+            vm.ErrorMessage = string.Empty;
+
+            GroupsPanel.Visibility = Visibility.Collapsed;
+            StudentsPanel.Visibility = Visibility.Collapsed;
+            RotationsPanel.Visibility = Visibility.Collapsed;
+
+            var tag = (args.SelectedItem as NavigationViewItem)?.Tag?.ToString();
+            switch (tag)
+            {
+                case "Groups":
+                    GroupsPanel.Visibility = Visibility.Visible;
+                    break;
+                case "Students":
+                    StudentsPanel.Visibility = Visibility.Visible;
+                    break;
+                case "Rotations":
+                    RotationsPanel.Visibility = Visibility.Visible;
+                    break;
+            }
         }
     }
 }

@@ -62,9 +62,11 @@ namespace SNRMS.ViewModels
 
         //STATION ------------------    
         [ObservableProperty]
+        public partial Station? SelectedStation { get; set; }
+        [ObservableProperty]
         public partial string StationName { get; set; } = string.Empty;
         [ObservableProperty]
-        public partial int StationCapacity { get; set; }
+        public partial string StationCapacity { get; set; }
 
 
         //GENERAL-------------------
@@ -79,6 +81,8 @@ namespace SNRMS.ViewModels
 
 
         //COLLECTIONS / LISTS -------------------
+        [ObservableProperty]
+        public partial ObservableCollection<Station> SelectedHospitalStations { get; set; } = new();
         [ObservableProperty]
         public partial ObservableCollection<Section> Sections { get; set; } = new ObservableCollection<Section>();
         [ObservableProperty]
@@ -297,17 +301,24 @@ namespace SNRMS.ViewModels
                     ErrorMessage = "Please select a hospital.";
                     return;
                 }
-                var addstation = await _hospitalService.AddStationAsync(SelectedHospital.HospitalId, StationName, StationCapacity);
+                if(!int.TryParse(StationCapacity, out int capacity) || capacity < 0)
+                {
+                    ErrorMessage = "Please input a valid numerical value for station capacity.";
+                    return;
+                }
+                var addstation = await _hospitalService.AddStationAsync(SelectedHospital.HospitalId, StationName, int.Parse(StationCapacity));
                 if (addstation != null)
                 {
+                    SelectedHospitalStations.Add(addstation);
                     var index = Hospitals.IndexOf(SelectedHospital);
                     if (index >= 0)
                     {
                         Hospitals[index].Stations.Add(addstation);
+                        SelectedHospital.Stations.Add(addstation);
                         SelectedHospital = Hospitals[index];
                     }
                     StationName = string.Empty;
-                    StationCapacity = 0;
+                    StationCapacity = "";
                 }
                 SuccessMessage = "Station added successfully.";
             }
@@ -492,8 +503,42 @@ namespace SNRMS.ViewModels
                 Hospitals.Add(hospital);
         }
 
-        
+        [RelayCommand]
+        partial void OnSelectedHospitalChanged(Hospital? value)
+        {
+            SelectedHospitalStations.Clear();
+            if (value != null)
+                foreach (var station in value.Stations)
+                    SelectedHospitalStations.Add(station);
+        }
 
 
+        [RelayCommand]
+        public async Task RemoveStationAsync()
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedStation == null)
+                {
+                    ErrorMessage = "Please select a station to remove.";
+                    return;
+                }
+                await _hospitalService.RemoveStationAsync(SelectedStation.StationId);
+                SelectedHospitalStations.Remove(SelectedStation);
+                SelectedStation = null;
+                SuccessMessage = "Station removed successfully.";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
     }
 }

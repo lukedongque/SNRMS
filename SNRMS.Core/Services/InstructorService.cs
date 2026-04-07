@@ -35,6 +35,7 @@ namespace SNRMS.Core.Services
         public async Task<List<Instructor>> GetAllInstructorsAsync()
         {
             var instructorsList = await _dbContext.Instructors
+                .AsNoTracking()
                 .Include(i => i.User)
                 .ToListAsync();
             if (instructorsList.Count == 0)

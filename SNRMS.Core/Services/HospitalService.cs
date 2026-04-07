@@ -52,9 +52,22 @@ namespace SNRMS.Core.Services
             return station;
         }
 
+        public async Task<Station?> RemoveStationAsync(int stationId)
+        {
+            var station = await _dbContext.Stations.Include(s => s.RotationAssignments).FirstOrDefaultAsync(s => s.StationId == stationId);
+            if (station == null)
+                throw new InvalidOperationException("Station not found.");
+            if (station.RotationAssignments.Any())
+                throw new InvalidOperationException("Cannot remove station with assigned rotations.");
+         
+            _dbContext.Stations.Remove(station);
+            await _dbContext.SaveChangesAsync();
+            return station;
+        }
+
         public async Task<List<Hospital>> GetAllHospitalsAsync()
         {
-            return await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).ToListAsync();
+            return await _dbContext.Hospitals.AsNoTracking().Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).ToListAsync();
         }
         public async Task<List<Station>> GetAllStationsByHospitalIdAsync(int hospitalId)
         {
