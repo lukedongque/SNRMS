@@ -18,7 +18,7 @@ namespace SNRMS.Core.Services
         {
             if (startDate >= endDate)
                 throw new InvalidOperationException("Start date must be before end date.");
-            
+
             var station = await _dbContext.Stations.FindAsync(stationId);
             if (station == null)
                 throw new InvalidOperationException("Station not found.");
@@ -29,10 +29,11 @@ namespace SNRMS.Core.Services
                      (startDate <= ca.StartDate && endDate >= ca.EndDate)));
             if (currentAssignments >= station.Capacity)
                 throw new InvalidOperationException("Station capacity is full for the given time slot.");
-            var groupConflict = await _dbContext.RotationAssignments.AnyAsync(ra => ra.GroupId == groupId && ra.DaySlot == dayslot &&
-                    ((startDate >= ra.StartDate && startDate <= ra.EndDate) ||
-                     (endDate >= ra.StartDate && endDate <= ra.EndDate) ||
-                     (startDate <= ra.StartDate && endDate >= ra.EndDate)));
+            var groupConflict = await _dbContext.RotationAssignments
+                    .AnyAsync(ra => ra.GroupId == groupId &&
+                    ra.DaySlot == dayslot &&
+                    startDate <= ra.EndDate &&
+                    endDate >= ra.StartDate);
             if (groupConflict)
                 throw new InvalidOperationException("Group has another assignment during the same time slot.");
 
@@ -94,13 +95,13 @@ namespace SNRMS.Core.Services
             var assignments = await _dbContext.RotationAssignments.Where(ra => groupIds.Contains(ra.GroupId))
                 .Include(ra => ra.Station)
                     .ToListAsync();
-            if(assignments.Count == 0)
+            if (assignments.Count == 0)
                 throw new InvalidOperationException("No rotation assignments found for the section.");
             return assignments;
 
         }
 
-        public async Task<List<RotationAssignment>> GetStudentRotationHistoryAsync (int studentId)
+        public async Task<List<RotationAssignment>> GetStudentRotationHistoryAsync(int studentId)
         {
             var studentAssignmentHistory = await _dbContext.StudentRotationHistories.Where(sah => sah.StudentId == studentId)
                 .Include(sah => sah.RotationAssignment)
@@ -122,8 +123,17 @@ namespace SNRMS.Core.Services
                 throw new ArgumentException("Cannot delete assignment with existing student history records.");
 
             _dbContext.RotationAssignments.Remove(rotationAssignment);
-             await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return rotationAssignment;
+        }
+
+        public async Task<List<RotationAssignment>> GetAllRotationAssignmentsAsync()
+        {
+            return await _dbContext.RotationAssignments
+                .Include(ra => ra.Station)
+                    .ThenInclude(s => s.Hospital)
+                .Include(ra => ra.Group)
+                .ToListAsync();
         }
     }
 }

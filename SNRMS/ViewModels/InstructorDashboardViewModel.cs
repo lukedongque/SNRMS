@@ -51,10 +51,10 @@ namespace SNRMS.ViewModels
         public partial RotationAssignment? SelectedRotationAssignment { get; set; }
         [ObservableProperty]
         public partial string DaySlot { get; set; } = string.Empty;
+       [ObservableProperty]
+        public partial DateTimeOffset RotationStartDate { get; set; } = DateTimeOffset.Now;
         [ObservableProperty]
-        public partial DateOnly RotationStartDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-        [ObservableProperty]
-        public partial DateOnly RotationEndDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public partial DateTimeOffset RotationEndDate { get; set; } = DateTimeOffset.Now;
         [ObservableProperty]
         public partial Station? SelectedStation { get; set; }
 
@@ -70,6 +70,8 @@ namespace SNRMS.ViewModels
         public partial ObservableCollection<RotationAssignment> RotationAssignments { get; set; } = new ObservableCollection<RotationAssignment>();
         [ObservableProperty]
         public partial ObservableCollection<Station> Stations { get; set; } = new ObservableCollection<Station>();
+
+        public List<string> DaySlotsList { get; } = new List<string> { "Mon-Tue", "Wed-Thu", "Fri-Sat" };
 
         //OTHERS ---------------------
         [ObservableProperty]
@@ -89,11 +91,14 @@ namespace SNRMS.ViewModels
                 var section = await _sectionService.GetInstructorSectionAsync(instructorId);
                 var groups = await _groupService.GetGroupBySectionAsync(section.SectionId);
                 var students = await _studentService.GetAllStudentsAsync();
+                var rotationassignments = await _rotationService.GetAssignmentBySection(section.SectionId);
                 Groups.Clear();
                 foreach (var group in groups)
                 {
                     Groups.Add(group);
                 }
+                if (_isGroupsSorted)
+                    SortGroupsByName();
                 var hospitals = await _hospitalService.GetAllHospitalsAsync();
                 Stations.Clear();
                 foreach (var hospital in hospitals)
@@ -117,6 +122,11 @@ namespace SNRMS.ViewModels
                 foreach (var student in students)
                 {
                     Students.Add(student);
+                }
+                RotationAssignments.Clear();
+                foreach (var assignment in rotationassignments)
+                {
+                    RotationAssignments.Add(assignment);
                 }
                 //var allStudents = new List<Student>();
                 //foreach (var group in Groups)
@@ -322,20 +332,35 @@ namespace SNRMS.ViewModels
         public async Task CreateRotationAssignmentAsync()
         {
             IsLoading = true;
-            if (SelectedGroup == null || SelectedStation == null || string.IsNullOrEmpty(DaySlot))
+            //if (SelectedGroup == null || SelectedStation == null || string.IsNullOrEmpty(DaySlot))
+            //{
+            //    ErrorMessage = "Please select a group, station, and day slot to create a rotation assignment.";
+            //    return;
+            //}
+            if (SelectedGroup == null)
             {
-                ErrorMessage = "Please select a group, station, and day slot to create a rotation assignment.";
+                ErrorMessage = "Please select a group";
+                return;
+            }
+            if (SelectedStation == null)
+            {
+                ErrorMessage = "Please select a station";
+                return;
+            }
+            if (string.IsNullOrEmpty(DaySlot))
+            {
+                ErrorMessage = "Please select a  day slot to create a rotation assignment.";
                 return;
             }
             try
             {
-                var rotationAssignment = await _rotationService.CreateRotationAssignmentAsync(SelectedGroup.GroupId , SelectedStation.StationId, DaySlot, RotationStartDate, RotationEndDate);
+                var rotationAssignment = await _rotationService.CreateRotationAssignmentAsync(SelectedGroup.GroupId , SelectedStation.StationId, DaySlot, DateOnly.FromDateTime(RotationStartDate.Date), DateOnly.FromDateTime(RotationEndDate.Date));
                 if (rotationAssignment != null)
                 {
                     RotationAssignments.Add(rotationAssignment);
                     DaySlot = string.Empty;
-                    RotationStartDate = DateOnly.FromDateTime(DateTime.Now);
-                    RotationEndDate = DateOnly.FromDateTime(DateTime.Now);
+                    RotationStartDate = DateTimeOffset.Now;
+                    RotationEndDate = DateTimeOffset.Now;
                     SelectedStation = null;
                 }
             }
@@ -392,6 +417,20 @@ namespace SNRMS.ViewModels
                 ErrorMessage = $"An error occurred while retrieving the group: {ex.Message}";
             }
             finally { IsLoading = false; }
+
         }
+        private bool _isGroupsSorted = false;
+
+        [RelayCommand]
+        public void SortGroupsByName()
+        {
+            _isGroupsSorted = true;
+            var sorted = Groups.OrderBy(g => g.GroupName).ToList();
+            Groups.Clear();
+            foreach (var group in sorted)
+                Groups.Add(group);
+        }
+
+
     }
 }
