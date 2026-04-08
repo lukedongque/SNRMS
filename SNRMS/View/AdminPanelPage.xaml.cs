@@ -20,6 +20,7 @@ namespace SNRMS.View
         {
             var vm = (AdminPanelViewModel)DataContext;
             vm.ErrorMessage = string.Empty;
+            vm.SuccessMessage = string.Empty;
             SectionsPanel.Visibility = Visibility.Collapsed;
             InstructorsPanel.Visibility = Visibility.Collapsed;
             HospitalsPanel.Visibility = Visibility.Collapsed;

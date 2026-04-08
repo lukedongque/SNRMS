@@ -20,7 +20,7 @@ namespace SNRMS.View
         {
             var vm = (InstructorDashboardViewModel)DataContext;
             vm.ErrorMessage = string.Empty;
-
+            vm.SuccessMessage = string.Empty;
             GroupsPanel.Visibility = Visibility.Collapsed;
             StudentsPanel.Visibility = Visibility.Collapsed;
             RotationsPanel.Visibility = Visibility.Collapsed;

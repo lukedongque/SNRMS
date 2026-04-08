@@ -78,13 +78,16 @@ namespace SNRMS.ViewModels
         public partial bool IsLoading { get; set; }
         [ObservableProperty]
         public partial string ErrorMessage { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string SuccessMessage { get; set; } = string.Empty;
 
 
         [RelayCommand]
         public async Task LoadDataAsync()
         {
             IsLoading = true;
-            ErrorMessage = string.Empty;
+            ErrorMessage = string.Empty; 
+            SuccessMessage = string.Empty;
             try
             {
                 var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
@@ -98,7 +101,7 @@ namespace SNRMS.ViewModels
                     Groups.Add(group);
                 }
                 if (_isGroupsSorted)
-                    SortGroupsByName();
+                SortGroupsByName();
                 var hospitals = await _hospitalService.GetAllHospitalsAsync();
                 Stations.Clear();
                 foreach (var hospital in hospitals)
@@ -186,6 +189,8 @@ namespace SNRMS.ViewModels
         public async Task CreateGroupAsync()
         {
             IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             if (string.IsNullOrEmpty(GroupName))
             {
                 ErrorMessage = "Group name is required.";
@@ -201,6 +206,7 @@ namespace SNRMS.ViewModels
                     Groups.Add(group);
                     GroupName = string.Empty;
                 }
+                SuccessMessage = "Group created successfully.";
             }
             catch (Exception ex)
             {
@@ -212,6 +218,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task DeleteGroupAsync()
         {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             IsLoading = true;
             if (SelectedGroup == null)
             {
@@ -226,6 +234,7 @@ namespace SNRMS.ViewModels
                     Groups.Remove(SelectedGroup);
                     SelectedGroup = null;
                 }
+                SuccessMessage = "Group deleted successfully.";
             }
             catch (Exception ex)
             {
@@ -237,6 +246,8 @@ namespace SNRMS.ViewModels
         public async Task CreateStudentAsync()
         {
             IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             try
             {
                 var student = await _studentService.CreateStudentAsync(StudentFirstName, StudentLastName, StudentEmail, StudentNumber);
@@ -249,7 +260,7 @@ namespace SNRMS.ViewModels
                     StudentNumber = string.Empty;
                 }
                 await LoadDataAsync();
-
+                SuccessMessage = "Student created successfully.";
             }
             catch (Exception ex)
             {
@@ -260,6 +271,8 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task BulkCreateStudent()
         {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             IsLoading = true;
             try
             {
@@ -268,6 +281,7 @@ namespace SNRMS.ViewModels
                 {
                     Students.Add(student);
                 }
+                SuccessMessage = $"{bulkstudents.Count} students created successfully.";
             }
             catch (Exception ex)
             {
@@ -279,6 +293,8 @@ namespace SNRMS.ViewModels
         public async Task DeleteStudentAsync()
         {
             IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             if (SelectedStudent == null)
             {
                 ErrorMessage = "Please select a student to delete.";
@@ -293,6 +309,7 @@ namespace SNRMS.ViewModels
                     SelectedStudent = null;
                 }
                 await LoadDataAsync();
+                SuccessMessage = "Student deleted successfully.";
             }
             catch (Exception ex)
             {
@@ -304,6 +321,8 @@ namespace SNRMS.ViewModels
         public async Task TransferStudentAsync()
         {
             IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             if (SelectedStudent == null || SelectedGroup == null)
             {
                 ErrorMessage = "Please select a student and a group to transfer.";
@@ -321,6 +340,7 @@ namespace SNRMS.ViewModels
 
                 }
                 await LoadDataAsync();
+                SuccessMessage = "Student transferred successfully.";
             }
             catch (Exception ex)
             {
@@ -332,26 +352,14 @@ namespace SNRMS.ViewModels
         public async Task CreateRotationAssignmentAsync()
         {
             IsLoading = true;
-            //if (SelectedGroup == null || SelectedStation == null || string.IsNullOrEmpty(DaySlot))
-            //{
-            //    ErrorMessage = "Please select a group, station, and day slot to create a rotation assignment.";
-            //    return;
-            //}
-            if (SelectedGroup == null)
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            if (SelectedGroup == null || SelectedStation == null || string.IsNullOrEmpty(DaySlot))
             {
-                ErrorMessage = "Please select a group";
+                ErrorMessage = "Please select a group, station, and day slot to create a rotation assignment.";
                 return;
             }
-            if (SelectedStation == null)
-            {
-                ErrorMessage = "Please select a station";
-                return;
-            }
-            if (string.IsNullOrEmpty(DaySlot))
-            {
-                ErrorMessage = "Please select a  day slot to create a rotation assignment.";
-                return;
-            }
+
             try
             {
                 var rotationAssignment = await _rotationService.CreateRotationAssignmentAsync(SelectedGroup.GroupId , SelectedStation.StationId, DaySlot, DateOnly.FromDateTime(RotationStartDate.Date), DateOnly.FromDateTime(RotationEndDate.Date));
@@ -363,6 +371,7 @@ namespace SNRMS.ViewModels
                     RotationEndDate = DateTimeOffset.Now;
                     SelectedStation = null;
                 }
+                SuccessMessage = "Rotation assignment created successfully.";
             }
             catch (Exception ex)
             {
@@ -374,6 +383,8 @@ namespace SNRMS.ViewModels
         public async Task DeleteRotationAssignmentAsync()
         {
             IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             if (SelectedRotationAssignment == null)
             {
                 ErrorMessage = "Please select a rotation assignment to delete.";
@@ -387,6 +398,7 @@ namespace SNRMS.ViewModels
                     RotationAssignments.Remove(SelectedRotationAssignment);
                     SelectedRotationAssignment = null;
                 }
+                SuccessMessage = "Rotation assignment deleted successfully.";
             }
             catch (Exception ex)
             {
@@ -398,6 +410,8 @@ namespace SNRMS.ViewModels
         public async Task GetGroupByIdAsync()
         {
             IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
             try
             {       
                 var group = await _groupService.GetGroupByIdAsync(SelectedGroup!.GroupId);
@@ -431,6 +445,26 @@ namespace SNRMS.ViewModels
                 Groups.Add(group);
         }
 
-
+        [RelayCommand]
+        public async Task GetGroupBySectionAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                var section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                var groups = await _groupService.GetGroupBySectionAsync(section.SectionId);
+                Groups.Clear();
+                foreach (var group in groups)
+                {
+                    Groups.Add(group);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while retrieving groups by section: {ex.Message}";
+            }
+            finally { IsLoading = false; }
+        }
     }
 }
