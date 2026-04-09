@@ -117,5 +117,15 @@ namespace SNRMS.Core.Services
             }
             return createdHospitals;
         }
+
+        public async Task<List<Hospital>> GetHospitalsByNameAsync(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Hospital name is required.");
+            var hospitals = await _dbContext.Hospitals.AsNoTracking().Where(h => h.HospitalName.Contains(name) || h.Address.Contains(name)).ToListAsync();
+            if (hospitals.Count == 0)
+                throw new InvalidOperationException("No hospitals found with the provided name.");
+            return hospitals;
+        }
     }
 }

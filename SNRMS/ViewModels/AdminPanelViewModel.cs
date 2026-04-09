@@ -47,6 +47,8 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial string InstructorLastName { get; set; } = string.Empty;
         [ObservableProperty]
+        public partial string InstructorSearchQuery { get; set; } = string.Empty;
+        [ObservableProperty]
         public partial string InstructorEmail { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string InstructorEmployeeId { get; set; } = string.Empty;    
@@ -97,6 +99,10 @@ namespace SNRMS.ViewModels
                 "Section A", "Section B", "Section C", "Section D", "Section E"
         };
         public List<string> SortChoicesList { get; } = new List<string> { "Name", "Year Level" };
+
+
+
+        // LOAD DATA COMMANDS ----------------------------------------------------------------------
         [RelayCommand]
         public async Task LoadDataAsync()
         {
@@ -134,6 +140,9 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+
+
+        //SECTION COMMANDS ----------------------------------------------------------------------
         [RelayCommand]
         public async Task CreateSectionAsync()
         {
@@ -195,7 +204,56 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        [RelayCommand]
+        public void SortSections()
+        {
+            if (SelectedSort == "Name")
+            {
+                var sorted = Sections.OrderBy(s => s.SectionName).ToList();
+                Sections.Clear();
+                foreach (var section in sorted)
+                    Sections.Add(section);
+            }
+            else if (SelectedSort == "Year Level")
+            {
+                var sorted = Sections.OrderBy(s => s.YearLevel).ToList();
+                Sections.Clear();
+                foreach (var section in sorted)
+                    Sections.Add(section);
+            }
 
+        }
+
+        //INSTRUCTOR COMMANDS ----------------------------------------------------------------------
+        [RelayCommand]
+        public async Task CreateInstructorAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                var createinstructor = await _userService.CreateInstructorAsync(InstructorFirstName, InstructorLastName, InstructorEmail, InstructorEmployeeId);
+                if (createinstructor != null)
+                {
+                    Instructors.Add(createinstructor);
+                    InstructorFirstName = string.Empty;
+                    InstructorLastName = string.Empty;
+                    InstructorEmail = string.Empty;
+                    InstructorEmployeeId = string.Empty;
+                }
+                SuccessMessage = "Instructor created successfully.";
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while creating instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
         [RelayCommand]
         public async Task AssignInstructorToSectionAsync()
         {
@@ -231,6 +289,152 @@ namespace SNRMS.ViewModels
             }
 
         }
+        [RelayCommand]
+        public async Task UnassignInstructorAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedSection == null)
+                {
+                    ErrorMessage = "Please select a section to unassign.";
+                    return;
+                }
+                var updatedSection = await _sectionService.UnassignInstructorAsync(SelectedSection.SectionId);
+                if (updatedSection != null)
+                {
+                    var index = Sections.IndexOf(SelectedSection);
+                    if (index >= 0)
+                    {
+                        Sections[index] = updatedSection;
+                        SelectedSection = updatedSection;
+                    }
+                }
+                SuccessMessage = "Instructor unassigned successfully.";
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while unassigning instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
+        public async Task DeactivateUserAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedInstructor == null)
+                {
+                    ErrorMessage = "Please select an instructor to deactivate.";
+                    return;
+                }
+                var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
+                if (instructorUser == null)
+                {
+                    ErrorMessage = "Associated user account not found.";
+                    return;
+                }
+                var user = await _userService.DeactivateUserAsync(instructorUser.UserId);
+                SelectedInstructor = null;
+
+
+                SuccessMessage = "Instructor deactivated successfully.";
+                await LoadDataAsync();
+
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task ReactivateUserAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedInstructor == null)
+                {
+                    ErrorMessage = "Please select an instructor to reactivate.";
+                    return;
+                }
+                var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
+                if (instructorUser == null)
+                {
+                    ErrorMessage = "Associated user account not found.";
+                    return;
+                }
+                var user = await _userService.ReactivateUserAsync(instructorUser.UserId);
+                SelectedInstructor = null;
+
+                SuccessMessage = "Instructor reactivated successfully.";
+                await LoadDataAsync();
+
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while deleting instructor: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        [RelayCommand]
+        public void SortInstructorsByLastName()
+        {
+            var sorted = Instructors.OrderBy(i => i.LastName).ToList();
+            Instructors.Clear();
+            foreach (var instructor in sorted)
+                Instructors.Add(instructor);
+        }
+
+        [RelayCommand]
+        public async Task SearchInstructorAsync()
+        {
+            IsLoading = true;
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            try
+            {
+                if(string.IsNullOrEmpty(InstructorSearchQuery))
+                {
+                    await LoadDataAsync();
+                    return;
+                }
+
+                var results = await _instructorService.SearchInstructorsAsync(InstructorSearchQuery);
+                Instructors.Clear();
+                foreach (var instructor in results)
+                    Instructors.Add(instructor);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while searching for instructors: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+
+        //HOSPITAL COMMANDS ----------------------------------------------------------------------
         [RelayCommand]
         public async Task CreateHospitalAsync()
         {
@@ -287,7 +491,52 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        [RelayCommand]
+        public void SortHospitalsByName()
+        {
+            var sorted = Hospitals.OrderBy(h => h.HospitalName).ToList();
+            Hospitals.Clear();
+            foreach (var hospital in sorted)
+                Hospitals.Add(hospital);
+        }
+        [RelayCommand]
+        partial void OnSelectedHospitalChanged(Hospital? value)
+        {
+            SelectedHospitalStations.Clear();
+            if (value != null)
+                foreach (var station in value.Stations)
+                    SelectedHospitalStations.Add(station);
+        }
+        [RelayCommand]
+        public async Task GetHospitalsByNameAsync()
+        {
+            IsLoading = true;
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            try
+            {
+                if (string.IsNullOrEmpty(HospitalName))
+                {
+                    await LoadDataAsync();
+                    return;
+                }
+                var hospitals = await _hospitalService.GetHospitalsByNameAsync(HospitalName);
+                Hospitals.Clear();
+                foreach (var hospital in hospitals)
+                    Hospitals.Add(hospital);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while searching for hospitals: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
 
+            }
+        }
+
+        //STATION COMMANDS ----------------------------------------------------------------------
         [RelayCommand]
         public async Task AddStationAsync()
         {
@@ -309,14 +558,8 @@ namespace SNRMS.ViewModels
                 var addstation = await _hospitalService.AddStationAsync(SelectedHospital.HospitalId, StationName, int.Parse(StationCapacity));
                 if (addstation != null)
                 {
-                    SelectedHospitalStations.Add(addstation);
-                    var index = Hospitals.IndexOf(SelectedHospital);
-                    if (index >= 0)
-                    {
-                        Hospitals[index].Stations.Add(addstation);
-                        SelectedHospital.Stations.Add(addstation);
-                        SelectedHospital = Hospitals[index];
-                    }
+                    SelectedHospital.Stations.Add(addstation);
+                    OnSelectedHospitalChanged(SelectedHospital);
                     StationName = string.Empty;
                     StationCapacity = "";
                 }
@@ -331,188 +574,6 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task CreateInstructorAsync()
-        {
-            SuccessMessage = string.Empty;
-            ErrorMessage = string.Empty;
-            IsLoading = true;
-            try
-            {
-                var createinstructor = await _userService.CreateInstructorAsync(InstructorFirstName, InstructorLastName, InstructorEmail, InstructorEmployeeId);
-                if (createinstructor != null)
-                {
-                    Instructors.Add(createinstructor);
-                    InstructorFirstName = string.Empty;
-                    InstructorLastName = string.Empty;
-                    InstructorEmail = string.Empty;
-                    InstructorEmployeeId = string.Empty;
-                }
-                SuccessMessage = "Instructor created successfully.";
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred while creating instructor: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-        [RelayCommand]
-        public async Task UnassignInstructorAsync()
-        {
-            SuccessMessage = string.Empty;
-            ErrorMessage = string.Empty;
-            IsLoading = true;
-            try
-            {
-                if (SelectedSection == null)
-                {
-                    ErrorMessage = "Please select a section to unassign.";
-                    return;
-                }
-                var updatedSection = await _sectionService.UnassignInstructorAsync(SelectedSection.SectionId);
-                if (updatedSection != null)
-                {
-                    var index = Sections.IndexOf(SelectedSection);
-                    if (index >= 0)
-                    {
-                        Sections[index] = updatedSection;
-                        SelectedSection = updatedSection;
-                    }
-                }
-                SuccessMessage = "Instructor unassigned successfully.";
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred while unassigning instructor: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-        [RelayCommand]
-        public async Task DeactivateUserAsync()
-        {
-            SuccessMessage = string.Empty;
-            ErrorMessage = string.Empty;
-            IsLoading = true;
-            try
-            {
-                if (SelectedInstructor == null)
-                {
-                    ErrorMessage = "Please select an instructor to deactivate.";
-                    return;
-                }
-                var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
-                if(instructorUser == null)
-                {
-                    ErrorMessage = "Associated user account not found.";
-                    return;
-                }
-                var user = await _userService.DeactivateUserAsync(instructorUser.UserId);
-                SelectedInstructor = null;
-
-               
-                SuccessMessage = "Instructor deactivated successfully.";
-                await LoadDataAsync();
-
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred while deleting instructor: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        [RelayCommand]
-        public async Task ReactivateUserAsync()
-        {
-            SuccessMessage = string.Empty;
-            ErrorMessage = string.Empty;
-            IsLoading = true;
-            try
-            {
-                if (SelectedInstructor == null)
-                {
-                    ErrorMessage = "Please select an instructor to reactivate.";
-                    return;
-                }
-                var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == SelectedInstructor.InstructorId);
-                if (instructorUser == null)
-                {
-                    ErrorMessage = "Associated user account not found.";
-                    return;
-                }
-                var user = await _userService.ReactivateUserAsync(instructorUser.UserId);
-                SelectedInstructor = null;
-
-                SuccessMessage = "Instructor reactivated successfully.";
-                                await LoadDataAsync();
-
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred while deleting instructor: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        [RelayCommand]
-        public void SortSections()
-        {
-            if (SelectedSort == "Name")
-            {
-                var sorted = Sections.OrderBy(s => s.SectionName).ToList();
-                Sections.Clear();
-                foreach (var section in sorted)
-                    Sections.Add(section);
-            }
-            else if (SelectedSort == "Year Level")
-            {
-                var sorted = Sections.OrderBy(s => s.YearLevel).ToList();
-                Sections.Clear();
-                foreach (var section in sorted)
-                    Sections.Add(section);
-            }
-
-        }
-        [RelayCommand]
-        public void SortInstructorsByLastName()
-        {
-            var sorted = Instructors.OrderBy(i => i.LastName).ToList();
-            Instructors.Clear();
-            foreach (var instructor in sorted)
-                Instructors.Add(instructor);
-        }
-
-        [RelayCommand]
-        public void SortHospitalsByName()
-        {
-            var sorted = Hospitals.OrderBy(h => h.HospitalName).ToList();
-            Hospitals.Clear();
-            foreach (var hospital in sorted)
-                Hospitals.Add(hospital);
-        }
-
-        [RelayCommand]
-        partial void OnSelectedHospitalChanged(Hospital? value)
-        {
-            SelectedHospitalStations.Clear();
-            if (value != null)
-                foreach (var station in value.Stations)
-                    SelectedHospitalStations.Add(station);
-        }
-
-
         [RelayCommand]
         public async Task RemoveStationAsync()
         {
@@ -540,5 +601,12 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+
+        
+
+        
+
+
+        
     }
 }

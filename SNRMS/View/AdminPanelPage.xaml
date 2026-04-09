@@ -162,23 +162,23 @@
             BorderBrush="#E2E8F0" BorderThickness="1">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Create New Instructor" FontWeight="SemiBold" 
-                       Foreground="#2D3748" FontSize="16"/>
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBox Header="First Name" 
-                         Text="{Binding InstructorFirstName, Mode=TwoWay}" 
-                         Width="150" PlaceholderText="First Name"/>
-                                <TextBox Header="Last Name" 
-                         Text="{Binding InstructorLastName, Mode=TwoWay}" 
-                         Width="150" PlaceholderText="Last Name"/>
-                                <TextBox Header="Email" 
-                         Text="{Binding InstructorEmail, Mode=TwoWay}" 
-                         Width="200" PlaceholderText="email@school.com"/>
-                                <TextBox Header="Employee ID" 
-                         Text="{Binding InstructorEmployeeId, Mode=TwoWay}" 
-                         Width="150" PlaceholderText="e.g. EMP001"/>
-                                <Button Content="Create" VerticalAlignment="Bottom"
-                        Command="{Binding CreateInstructorCommand}"
-                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                           Foreground="#2D3748" FontSize="16"/>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBox Header="First Name" 
+                                         Text="{Binding InstructorFirstName, Mode=TwoWay}" 
+                                         Width="150" PlaceholderText="First Name"/>
+                                    <TextBox Header="Last Name" 
+                                         Text="{Binding InstructorLastName, Mode=TwoWay}" 
+                                         Width="150" PlaceholderText="Last Name"/>
+                                     <TextBox Header="Email" 
+                                         Text="{Binding InstructorEmail, Mode=TwoWay}" 
+                                         Width="200" PlaceholderText="email@school.com"/>
+                                    <TextBox Header="Employee ID" 
+                                         Text="{Binding InstructorEmployeeId, Mode=TwoWay}" 
+                                         Width="150" PlaceholderText="e.g. EMP001"/>
+                                    <Button Content="Create" VerticalAlignment="Bottom"
+                                        Command="{Binding CreateInstructorCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>  
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -198,6 +198,16 @@
                                         Command="{Binding SortInstructorsByLastNameCommand}"
                                         Background="#E2E8F0" Foreground="#2D3748"
                                         CornerRadius="6" Padding="8,4"/>
+                                <TextBlock Text="Search:" VerticalAlignment="Center" 
+                                        Foreground="#718096" FontSize="12" Margin="16,0,0,0"/>
+                                <TextBox Text="{Binding InstructorSearchQuery, Mode=TwoWay}"
+                                            PlaceholderText="All Instructors"
+                                            Width="200"/>
+                                <Button Content="Search" 
+                                        Command="{Binding SearchInstructorCommand}"
+                                        Background="#E2E8F0" Foreground="#2D3748"
+                                        CornerRadius="6" Padding="8,4"/>
+
                             </StackPanel>
 
                             <!-- List -->
@@ -270,130 +280,136 @@
 
                 </StackPanel>
                 <!-- HOSPITALS PANEL -->
-                <!-- HOSPITALS PANEL -->
-<StackPanel x:Name="HospitalsPanel" Visibility="Collapsed" Spacing="20">
-    <TextBlock Text="Hospitals" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+                <StackPanel x:Name="HospitalsPanel" Visibility="Collapsed" Spacing="20">
+                    <TextBlock Text="Hospitals" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
 
-    <!-- Create Hospital Card -->
-    <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
-        <StackPanel Spacing="12">
-            <TextBlock Text="Create New Hospital" FontWeight="SemiBold" 
-                       Foreground="#2D3748" FontSize="16"/>
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <TextBox Header="Hospital Name" 
-                         Text="{Binding HospitalName, Mode=TwoWay}" 
-                         Width="200" PlaceholderText="Hospital Name"/>
-                <TextBox Header="Address" 
-                         Text="{Binding HospitalAddress, Mode=TwoWay}" 
-                         Width="200" PlaceholderText="Address"/>
-                <Button Content="Create Hospital" VerticalAlignment="Bottom"
-                        Command="{Binding CreateHospitalCommand}"
-                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
-            </StackPanel>
-        </StackPanel>
-    </Border>
-
-    <!-- Hospitals List Card -->
-    <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
-        <StackPanel Spacing="12">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="All Hospitals" FontWeight="SemiBold" 
-                           Foreground="#2D3748" FontSize="16"/>
-                <TextBlock Text="Sort by:" VerticalAlignment="Center" 
-                           Foreground="#718096" FontSize="12" Margin="16,0,0,0"/>
-                <Button Content="Hospital Name" 
-                        Command="{Binding SortHospitalsByNameCommand}"
-                        Background="#E2E8F0" Foreground="#2D3748"
-                        CornerRadius="6" Padding="8,4"/>
-            </StackPanel>
-            <ListView ItemsSource="{Binding Hospitals}"
-                      SelectedItem="{Binding SelectedHospital, Mode=TwoWay}"
-                      Height="200">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Padding="8,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding HospitalName}" 
-                                       FontWeight="SemiBold" Foreground="#2D3748"
-                                       VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Address}" 
-                                       FontSize="12" Foreground="#718096"
-                                       VerticalAlignment="Center"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-            <Button Content="Delete Hospital" 
-                    Command="{Binding DeleteHospitalCommand}"
-                    Background="#E53E3E" Foreground="White" CornerRadius="8"/>
-        </StackPanel>
-    </Border>
-
-    <!-- Stations Card -->
-    <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
-        <StackPanel Spacing="12">
-            <TextBlock Text="Stations" FontWeight="SemiBold" 
-                       Foreground="#2D3748" FontSize="16"/>
-            
-            <!-- Add Station Form -->
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <TextBox Header="Station Name" 
-                         Text="{Binding StationName, Mode=TwoWay}" 
-                         Width="150" PlaceholderText="Station Name"/>
-                <TextBox Header="Capacity" 
-                         Text="{Binding StationCapacity, Mode=TwoWay}" 
-                         Width="100" PlaceholderText="Capacity"/>
-                <Button Content="Add Station" VerticalAlignment="Bottom"
-                        Command="{Binding AddStationCommand}"
-                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
-                <Button Content="Remove Station" VerticalAlignment="Bottom"
-                        Command="{Binding RemoveStationCommand}"
-                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                    <!-- Create Hospital Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Create New Hospital" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBox Header="Hospital Name" 
+                                         Text="{Binding HospitalName, Mode=TwoWay}" 
+                                         Width="200" PlaceholderText="Hospital Name"/>
+                                <TextBox Header="Address" 
+                                         Text="{Binding HospitalAddress, Mode=TwoWay}" 
+                                         Width="200" PlaceholderText="Address"/>
+                                <Button Content="Create Hospital" VerticalAlignment="Bottom"
+                                        Command="{Binding CreateHospitalCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
+                        </StackPanel>
+                    </Border>
 
-            <!-- Stations List -->
-            <ListView ItemsSource="{Binding SelectedHospitalStations}"
-                      SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
-                      Height="200">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Padding="8,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding StationName}" 
-                                       FontWeight="SemiBold" Foreground="#2D3748"
-                                       VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" 
-                                       Foreground="#718096"
-                                       FontSize="12"
-                                       VerticalAlignment="Center">
-                                <Run Text="Capacity: "/>
-                                <Run Text="{Binding Capacity}"/>
-                            </TextBlock>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-            <Button Content="Remove Station" 
-                    Command="{Binding RemoveStationCommand}"
-                    Background="#E53E3E" Foreground="White" CornerRadius="8"/>
-        </StackPanel>
-    </Border>
+                    <!-- Hospitals List Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="All Hospitals" FontWeight="SemiBold" 
+                                           Foreground="#2D3748" FontSize="16"/>
+                                <TextBlock Text="Sort by:" VerticalAlignment="Center" 
+                                           Foreground="#718096" FontSize="12" Margin="16,0,0,0"/>
+                                <Button Content="Hospital Name" 
+                                        Command="{Binding SortHospitalsByNameCommand}"
+                                        Background="#E2E8F0" Foreground="#2D3748"
+                                        CornerRadius="6" Padding="8,4"/>
+                                <TextBlock Text="Search:" VerticalAlignment="Center" 
+                                        Foreground="#718096" FontSize="12" Margin="16,0,0,0"/>
+                                <TextBox Text="{Binding HospitalName, Mode=TwoWay}"
+                                         PlaceholderText="All Hospitals"
+                                         Width="200"/>
+                                <Button Content="Search" 
+                                        Command="{Binding GetHospitalsByNameCommand}"
+                                        Background="#E2E8F0" Foreground="#2D3748"
+                                        CornerRadius="6" Padding="8,4"/>
 
-    <!-- Messages -->
-    <TextBlock Text="{Binding ErrorMessage}" Foreground="#E53E3E" 
-               FontSize="12" TextWrapping="Wrap"/>
-    <TextBlock Text="{Binding SuccessMessage}" Foreground="#38A169" 
-               FontSize="12" TextWrapping="Wrap"/>
-</StackPanel>                
+
+                            </StackPanel>
+                            <ListView ItemsSource="{Binding Hospitals}"
+                                      SelectedItem="{Binding SelectedHospital, Mode=TwoWay}"
+                                      Height="200">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding HospitalName}" 
+                                                       FontWeight="SemiBold" Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Address}" 
+                                                       FontSize="12" Foreground="#718096"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <Button Content="Delete Hospital" 
+                                    Command="{Binding DeleteHospitalCommand}"
+                                    Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Stations Card -->
+                    <Border Background="White" CornerRadius="12" Padding="20"
+                            BorderBrush="#E2E8F0" BorderThickness="1" Height="265">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Stations" FontWeight="SemiBold" 
+                                       Foreground="#2D3748" FontSize="16"/>
+            
+                            <!-- Add Station Form -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBox Header="Station Name" 
+                                         Text="{Binding StationName, Mode=TwoWay}" 
+                                         Width="150" PlaceholderText="Station Name"/>
+                                <TextBox Header="Capacity" 
+                                         Text="{Binding StationCapacity, Mode=TwoWay}" 
+                                         Width="100" PlaceholderText="Capacity"/>
+                                <Button Content="Add Station" VerticalAlignment="Bottom"
+                                        Command="{Binding AddStationCommand}"
+                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                <Button Content="Remove Station" VerticalAlignment="Bottom"
+                                        Command="{Binding RemoveStationCommand}"
+                                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                                            </StackPanel>
+
+                            <!-- Stations List -->
+                            <ListView ItemsSource="{Binding SelectedHospitalStations}"
+                                      SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                                      Height="130">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding StationName}" 
+                                                       FontWeight="SemiBold" Foreground="#2D3748"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Foreground="#718096"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center">
+                                                <Run Text="Capacity: "/>
+                                                <Run Text="{Binding Capacity}"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <Button Content="Remove Station" 
+                                    Command="{Binding RemoveStationCommand}"
+                                    Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                        </StackPanel>
+                    </Border>
+
+    
+                </StackPanel>                
 
                 <!-- Error Message -->
                 <TextBlock HorizontalAlignment ="Center" Text="{Binding ErrorMessage}" Foreground="#E53E3E" 

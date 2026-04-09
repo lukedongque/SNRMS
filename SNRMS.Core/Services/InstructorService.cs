@@ -67,6 +67,19 @@ namespace SNRMS.Core.Services
             return instructor;
         }
 
+        public async Task<List<Instructor>> SearchInstructorsAsync(string searchTerm)
+        {
+            if (string.IsNullOrEmpty(searchTerm))
+                throw new ArgumentException("Search term cannot be empty.");
+            var instructorsList = await _dbContext.Instructors
+                .AsNoTracking()
+                .Include(i => i.User)
+                .Where(i => i.FirstName.Contains(searchTerm) || i.LastName.Contains(searchTerm) || i.Email.Contains(searchTerm) || i.EmployeeId.Contains(searchTerm))
+                .ToListAsync();
+            if (instructorsList.Count == 0)
+                throw new InvalidOperationException("No instructors found matching the search criteria.");
+            return instructorsList;
+        }
 
     }
 }
