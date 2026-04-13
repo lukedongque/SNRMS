@@ -33,6 +33,12 @@ namespace SNRMS.ViewModels
         public partial Group? SelectedGroup { get; set; }
         [ObservableProperty]
         public partial string GroupName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial Group? FilterGroup { get; set; }
+        [ObservableProperty]
+        public partial Group? StudentGroupFilter { get; set; }
+        [ObservableProperty]
+        public partial Group? GroupToTransfer { get; set; }
 
         //STUDENTS ---------------------
         [ObservableProperty]
@@ -45,21 +51,37 @@ namespace SNRMS.ViewModels
         public partial string StudentEmail { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string StudentNumber { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string StudentSearchQuery { get; set; } = string.Empty;
 
         //ROTATIONS ---------------------
         [ObservableProperty]
         public partial RotationAssignment? SelectedRotationAssignment { get; set; }
         [ObservableProperty]
         public partial string DaySlot { get; set; } = string.Empty;
-       [ObservableProperty]
+        [ObservableProperty]
         public partial DateTimeOffset RotationStartDate { get; set; } = DateTimeOffset.Now;
         [ObservableProperty]
         public partial DateTimeOffset RotationEndDate { get; set; } = DateTimeOffset.Now;
         [ObservableProperty]
+        public partial TimeSpan? RotationStartTime { get; set; }
+        [ObservableProperty]
+        public partial TimeSpan? RotationEndTime { get; set; }
+        [ObservableProperty]
         public partial Station? SelectedStation { get; set; }
+        [ObservableProperty]
+        public partial Hospital? SelectedRotationHospital { get; set; }
+        [ObservableProperty]
+        public partial Group? FilterRotationGroup { get; set; }
+
+
+
 
 
         //COLLECTIONS ---------------------
+        [ObservableProperty]
+        public partial ObservableCollection<Hospital> Hospitals { get; set; } = new();
+
         [ObservableProperty]
         public partial ObservableCollection<Group> Groups { get; set; } = new ObservableCollection<Group>();
         [ObservableProperty]
@@ -68,6 +90,8 @@ namespace SNRMS.ViewModels
         public partial ObservableCollection<Student> Students { get; set; } = new ObservableCollection<Student>();
         [ObservableProperty]
         public partial ObservableCollection<RotationAssignment> RotationAssignments { get; set; } = new ObservableCollection<RotationAssignment>();
+        [ObservableProperty]
+        public partial ObservableCollection<Station> FilteredStations { get; set; } = new();
         [ObservableProperty]
         public partial ObservableCollection<Station> Stations { get; set; } = new ObservableCollection<Station>();
 
@@ -86,7 +110,7 @@ namespace SNRMS.ViewModels
         public async Task LoadDataAsync()
         {
             IsLoading = true;
-            ErrorMessage = string.Empty; 
+            ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
             try
             {
@@ -95,13 +119,17 @@ namespace SNRMS.ViewModels
                 var groups = await _groupService.GetGroupBySectionAsync(section.SectionId);
                 var students = await _studentService.GetAllStudentsAsync();
                 var rotationassignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                var allhospitals = await _hospitalService.GetAllHospitalsAsync();
+                Hospitals.Clear();
+                foreach (var hospital in allhospitals)
+                    Hospitals.Add(hospital);
                 Groups.Clear();
                 foreach (var group in groups)
                 {
                     Groups.Add(group);
                 }
                 if (_isGroupsSorted)
-                SortGroupsByName();
+                    SortGroupsByName();
                 var hospitals = await _hospitalService.GetAllHospitalsAsync();
                 Stations.Clear();
                 foreach (var hospital in hospitals)
@@ -150,11 +178,11 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        
+
         [RelayCommand]
         public async Task LoadGroupsAsync()
         {
-            if(SelectedGroup == null)
+            if (SelectedGroup == null)
             {
                 ErrorMessage = "Please select a group to load.";
                 return;
@@ -323,24 +351,27 @@ namespace SNRMS.ViewModels
             IsLoading = true;
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
-            if (SelectedStudent == null || SelectedGroup == null)
+            if (SelectedStudent == null || GroupToTransfer == null)
             {
                 ErrorMessage = "Please select a student and a group to transfer.";
+                IsLoading = false;
                 return;
             }
             try
             {
-                var student = await _studentService.GetStudentByIdAsync(SelectedStudent.StudentId);
-                if (student != null)
-                {
-                    await _studentService.TransferStudentAsync(SelectedStudent.StudentId, SelectedGroup.GroupId);
-                    Students.Remove(SelectedStudent);
-                    Students.Add(student);
-                    SelectedStudent = student;
+                await _studentService.TransferStudentAsync(SelectedStudent.StudentId, GroupToTransfer.GroupId);
 
+                var updatedStudent = await _studentService.GetStudentByIdAsync(SelectedStudent.StudentId);
+
+                var index = Students.IndexOf(SelectedStudent);
+                if (index != -1 && updatedStudent != null)
+                {
+                    Students[index] = updatedStudent;
                 }
-                await LoadDataAsync();
-                SuccessMessage = "Student transferred successfully.";
+
+                SuccessMessage = $"Transferred {updatedStudent.FirstName} to {GroupToTransfer.GroupName}.";
+
+                GroupToTransfer = null;
             }
             catch (Exception ex)
             {
@@ -359,10 +390,20 @@ namespace SNRMS.ViewModels
                 ErrorMessage = "Please select a group, station, and day slot to create a rotation assignment.";
                 return;
             }
+            if (RotationStartTime == null || RotationEndTime == null)
+            {
+                ErrorMessage = "Please select start and end time.";
+                return;
+            }
 
             try
             {
-                var rotationAssignment = await _rotationService.CreateRotationAssignmentAsync(SelectedGroup.GroupId , SelectedStation.StationId, DaySlot, DateOnly.FromDateTime(RotationStartDate.Date), DateOnly.FromDateTime(RotationEndDate.Date));
+                var rotationAssignment = await _rotationService
+                    .CreateRotationAssignmentAsync(SelectedGroup.GroupId, SelectedStation.StationId, DaySlot,
+                                                    DateOnly.FromDateTime(RotationStartDate.Date),
+                                                    DateOnly.FromDateTime(RotationEndDate.Date),
+                                                    TimeOnly.FromTimeSpan(RotationStartTime ?? TimeSpan.Zero),
+                                                    TimeOnly.FromTimeSpan(RotationEndTime ?? TimeSpan.Zero));
                 if (rotationAssignment != null)
                 {
                     RotationAssignments.Add(rotationAssignment);
@@ -413,7 +454,7 @@ namespace SNRMS.ViewModels
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
             try
-            {       
+            {
                 var group = await _groupService.GetGroupByIdAsync(SelectedGroup!.GroupId);
                 if (group != null)
                 {
@@ -463,6 +504,108 @@ namespace SNRMS.ViewModels
             catch (Exception ex)
             {
                 ErrorMessage = $"An error occurred while retrieving groups by section: {ex.Message}";
+            }
+            finally { IsLoading = false; }
+        }
+
+        partial void OnSelectedRotationHospitalChanged(Hospital? value)
+        {
+            FilteredStations.Clear();
+            if (value != null)
+                foreach (var station in Stations.Where(s => s.HospitalId == value.HospitalId))
+                    FilteredStations.Add(station);
+        }
+
+        [RelayCommand]
+        public async Task SearchStudentAsync()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var students = await _studentService.SearchStudentsAsync(StudentSearchQuery);
+                Students.Clear();
+                foreach (var student in students)
+                    Students.Add(student);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while searching for students: {ex.Message}";
+            }
+            finally { IsLoading = false; }
+        }
+
+        [RelayCommand]
+        public async Task GetRotationAssignmentByGroup()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                List<RotationAssignment> assignments;
+
+                if (FilterRotationGroup == null)
+                {
+                    var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                    var section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                    assignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                }
+                else
+                {
+                    assignments = await _rotationService.GetAssignmentByGroupAsync(FilterRotationGroup.GroupId);
+                }
+
+                RotationAssignments.Clear();
+                foreach (var a in assignments)
+                    RotationAssignments.Add(a);
+            }
+            catch (Exception ex)
+            {
+                RotationAssignments.Clear();
+                ErrorMessage = ex.Message;
+            }
+            finally { IsLoading = false; }
+        }
+
+        [RelayCommand]
+        public async Task GetAllRotationAssignmentsAsync()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                var section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                var assignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                RotationAssignments.Clear();
+                foreach (var a in assignments)
+                    RotationAssignments.Add(a);
+            }
+            catch (Exception ex)
+            {
+                RotationAssignments.Clear();
+                ErrorMessage = $"An error occurred while retrieving rotation assignments: {ex.Message}";
+            }
+            finally { IsLoading = false; }
+        }
+
+        [RelayCommand]
+        public async Task FilterStudentsByGroupAsync()
+        {
+            if (SelectedGroup == null) return;
+            IsLoading = true;
+            try
+            {
+                var students = await _studentService.GetStudentsByGroupAsync(SelectedGroup.GroupId);
+                Students.Clear();
+                foreach (var student in students)
+                {
+                    Students.Add(student);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error filtering students: {ex.Message}";
             }
             finally { IsLoading = false; }
         }

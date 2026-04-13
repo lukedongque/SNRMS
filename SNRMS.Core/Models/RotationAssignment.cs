@@ -14,6 +14,8 @@ namespace SNRMS.Core.Models
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
 
+        public TimeOnly StartTime { get; set; }
+        public TimeOnly EndTime { get; set; }
         public  Group Group { get; set; } = null!;
         public  Station Station { get; set; } = null!;
         public ICollection<StudentRotationHistory> RotationHistories { get; set; } = new List<StudentRotationHistory>();

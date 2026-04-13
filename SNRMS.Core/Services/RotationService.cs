@@ -14,7 +14,7 @@ namespace SNRMS.Core.Services
             _dbContext = dbContext;
         }
 
-        public async Task<RotationAssignment?> CreateRotationAssignmentAsync(int groupId, int stationId, string dayslot, DateOnly startDate, DateOnly endDate)
+        public async Task<RotationAssignment?> CreateRotationAssignmentAsync(int groupId, int stationId, string dayslot, DateOnly startDate, DateOnly endDate, TimeOnly startTime, TimeOnly endTime)
         {
             if (startDate >= endDate)
                 throw new InvalidOperationException("Start date must be before end date.");
@@ -43,7 +43,9 @@ namespace SNRMS.Core.Services
                 StationId = stationId,
                 StartDate = startDate,
                 EndDate = endDate,
-                DaySlot = dayslot
+                DaySlot = dayslot,
+                StartTime = startTime,
+                EndTime = endTime
             };
             _dbContext.RotationAssignments.Add(rotationAssignment);
             await _dbContext.SaveChangesAsync();
@@ -94,6 +96,8 @@ namespace SNRMS.Core.Services
                 .ToListAsync();
             var assignments = await _dbContext.RotationAssignments.Where(ra => groupIds.Contains(ra.GroupId))
                 .Include(ra => ra.Station)
+                    .ThenInclude(s => s.Hospital)
+                .Include(ra => ra.Group)
                     .ToListAsync();
             if (assignments.Count == 0)
                 throw new InvalidOperationException("No rotation assignments found for the section.");
@@ -135,5 +139,18 @@ namespace SNRMS.Core.Services
                 .Include(ra => ra.Group)
                 .ToListAsync();
         }
+
+        public async Task<List<RotationAssignment>> GetAssignmentByGroupAsync(int groupId)
+        {
+            var rotationassignments = await _dbContext.RotationAssignments.AsNoTracking().Where(ra => ra.GroupId == groupId)
+                .Include(ra => ra.Group)
+                .Include(ra => ra.Station)
+                    .ThenInclude(s => s.Hospital)
+                .ToListAsync();
+            
+            return rotationassignments;
+        }
+
+
     }
 }

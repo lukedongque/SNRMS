@@ -66,12 +66,18 @@ namespace SNRMS.Core.Services
             var group = await _dbContext.Groups.FindAsync(groupId);
             if (group == null)
                 throw new ArgumentException("Group not found");
-            return await _dbContext.Students.AsNoTracking().Where(s => s.GroupId == groupId).ToListAsync();
+            return await _dbContext.Students
+                    .Include(s => s.Group) 
+                    .AsNoTracking()
+                    .Where(s => s.GroupId == groupId)
+                    .ToListAsync();
         }
 
         public async Task<Student?> GetStudentByIdAsync(int studentId) //get student by id
         {
-            var student = await _dbContext.Students.FindAsync(studentId);
+            var student = await _dbContext.Students
+                .Include(s => s.Group)
+                .FirstOrDefaultAsync(s => s.StudentId == studentId);
             if (student == null)
                 throw new ArgumentException("Student not found");
             return student;
@@ -122,6 +128,18 @@ namespace SNRMS.Core.Services
         public async Task<List<Student>> GetAllStudentsAsync() //get all students
         {
             return await _dbContext.Students.AsNoTracking().Include(s => s.Group).ToListAsync();
+        }
+
+        public async Task<List<Student>> SearchStudentsAsync(string searchTerm) //search student by name or student number
+        {
+            if (string.IsNullOrEmpty(searchTerm))
+                throw new ArgumentException("Search term is required.");
+            return await _dbContext.Students.AsNoTracking()
+                .Where(s => s.FirstName.Contains(searchTerm) ||
+                            s.LastName.Contains(searchTerm) ||
+                            s.StudentNumber.Contains(searchTerm))
+                .Include(s => s.Group)
+                .ToListAsync();
         }
     }
 }
