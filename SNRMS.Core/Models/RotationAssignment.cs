@@ -18,6 +18,8 @@ namespace SNRMS.Core.Models
         public TimeOnly EndTime { get; set; }
         public  Group Group { get; set; } = null!;
         public  Station Station { get; set; } = null!;
+        public bool IsArchived { get; set; } = false;
+
         public ICollection<StudentRotationHistory> RotationHistories { get; set; } = new List<StudentRotationHistory>();
 
     }

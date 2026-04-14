@@ -60,7 +60,8 @@ namespace SNRMS.ViewModels
         public partial string HospitalName { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string HospitalAddress { get; set; } = string.Empty;
-
+        [ObservableProperty]
+        public partial string HospitalSearchName { get; set; } = string.Empty;
 
         //STATION ------------------    
         [ObservableProperty]
@@ -515,12 +516,12 @@ namespace SNRMS.ViewModels
             ErrorMessage = string.Empty;
             try
             {
-                if (string.IsNullOrEmpty(HospitalName))
+                if (string.IsNullOrEmpty(HospitalSearchName))
                 {
                     await LoadDataAsync();
                     return;
                 }
-                var hospitals = await _hospitalService.GetHospitalsByNameAsync(HospitalName);
+                var hospitals = await _hospitalService.GetHospitalsByNameAsync(HospitalSearchName);
                 Hospitals.Clear();
                 foreach (var hospital in hospitals)
                     Hospitals.Add(hospital);
@@ -602,9 +603,7 @@ namespace SNRMS.ViewModels
             }
         }
 
-        
-
-        
+         
 
 
         

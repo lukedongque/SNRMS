@@ -70,7 +70,7 @@ namespace SNRMS.Core.Services
                 .Include(ra => ra.Station)
                     .ThenInclude(s => s.Hospital)
                 .Include(ra => ra.Group)
-                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId))
+                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId) && !ra.IsArchived)
                 .OrderBy(ra => ra.StartDate)
                 .FirstOrDefaultAsync();
         }
@@ -83,7 +83,8 @@ namespace SNRMS.Core.Services
                 .Include(ra => ra.Group)
                 .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId)
                         && ra.StartDate <= today
-                        && ra.EndDate >= today)
+                        && ra.EndDate >= today
+                        && !ra.IsArchived)
                 .FirstOrDefaultAsync();
             if (rotationassignment == null)
                 throw new InvalidOperationException("No current rotation assignment found for the student.");
@@ -94,11 +95,12 @@ namespace SNRMS.Core.Services
             var groupIds = await _dbContext.Groups.Where(g => g.SectionId == sectionId)
                 .Select(g => g.GroupId)
                 .ToListAsync();
-            var assignments = await _dbContext.RotationAssignments.Where(ra => groupIds.Contains(ra.GroupId))
+            var assignments = await _dbContext.RotationAssignments
+                .Where(ra => groupIds.Contains(ra.GroupId) && !ra.IsArchived) 
                 .Include(ra => ra.Station)
                     .ThenInclude(s => s.Hospital)
                 .Include(ra => ra.Group)
-                    .ToListAsync();
+                .ToListAsync();
             if (assignments.Count == 0)
                 throw new InvalidOperationException("No rotation assignments found for the section.");
             return assignments;
@@ -119,16 +121,15 @@ namespace SNRMS.Core.Services
         }
         public async Task<RotationAssignment?> DeleteRotationAssignmentAsync(int rotationassignmentId)
         {
-            var rotationAssignment = await _dbContext.RotationAssignments.FindAsync(rotationassignmentId);
+            var rotationAssignment = await _dbContext.RotationAssignments
+            .FindAsync(rotationassignmentId);
             if (rotationAssignment == null)
                 throw new ArgumentException("No rotation assignment found.");
-            var hasRecords = await _dbContext.StudentRotationHistories.AnyAsync(hr => hr.RotationAssignmentId == rotationassignmentId);
-            if (hasRecords)
-                throw new ArgumentException("Cannot delete assignment with existing student history records.");
 
-            _dbContext.RotationAssignments.Remove(rotationAssignment);
+            rotationAssignment.IsArchived = true;  
             await _dbContext.SaveChangesAsync();
             return rotationAssignment;
+
         }
 
         public async Task<List<RotationAssignment>> GetAllRotationAssignmentsAsync()

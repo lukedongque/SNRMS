@@ -51,7 +51,7 @@ namespace SNRMS.Core.Services
                 throw new InvalidOperationException("Student not found.");
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.StudentId == studentId);
 
-            var hasAssignment = student.Group != null && student.Group.RotationAssignments.Any();
+            var hasAssignment = student.Group != null && student.Group.RotationAssignments.Any(ra => !ra.IsArchived);
             if (hasAssignment)
                 throw new InvalidOperationException("Cannot delete student with existing rotation assignments.");
             if (user != null)

@@ -54,7 +54,7 @@ namespace SNRMS.Core.Services
             var group = await _dbContext.Groups.Include(g => g.Students).Include(g => g.RotationAssignments).FirstOrDefaultAsync(g => g.GroupId == groupId);
             if (group == null)
                 throw new InvalidOperationException("Group not found.");
-            bool hasAssignment = group.RotationAssignments.Any();
+            bool hasAssignment = group.RotationAssignments.Any(ra=>!ra.IsArchived);
             if (hasAssignment)
                 throw new InvalidOperationException("Cannot delete group with existing rotation assignments.");
             group.Students.ToList().ForEach(s => s.GroupId = null); 

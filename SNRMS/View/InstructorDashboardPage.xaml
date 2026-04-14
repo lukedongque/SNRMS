@@ -83,6 +83,7 @@
                             <ListView ItemsSource="{Binding Groups}"
                                       SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
                                       Height="250">
+                                
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Padding="8,4">
