@@ -15,7 +15,46 @@
                         PaneTitle="Instructor Dashboard"
                         IsBackButtonVisible="Collapsed"
                         Background="#F0F4F8">
+            <NavigationView.PaneFooter>
+                <Grid Padding="16,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
+                    <FontIcon Grid.Column="0" 
+                  Glyph="&#xE77B;" 
+                  FontSize="16" 
+                  Foreground="#2B9ED4" 
+                  VerticalAlignment="Center" 
+                  Margin="0,0,12,0"/>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding InstructorDisplayName, Mode=OneWay}" 
+                       FontWeight="Bold" 
+                       FontSize="14" 
+                       Foreground="#1B3A6B" 
+                       TextTrimming="CharacterEllipsis" 
+                       TextWrapping="NoWrap"/>
+
+                        <TextBlock Text="{Binding InstructorEmployeeId, Mode=OneWay}" 
+                       FontSize="11" 
+                       Foreground="#718096"
+                       TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap"/>
+                    </StackPanel>
+                </Grid>
+            </NavigationView.PaneFooter>
+            
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Logout" 
+                    Icon="LeaveChat" 
+                    Foreground="#E53E3E" 
+                    SelectsOnInvoked="False"
+                    Tapped="Logout_Tapped" />
+                
+            </NavigationView.FooterMenuItems>
+            
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Groups" Tag="Groups" Icon="People"/>
                 <NavigationViewItem Content="Students" Tag="Students" Icon="Contact"/>

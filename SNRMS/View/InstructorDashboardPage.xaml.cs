@@ -12,7 +12,7 @@ namespace SNRMS.View
             InitializeComponent();
             var vm = (InstructorDashboardViewModel)DataContext;
             _ = vm.LoadDataAsync();
-          
+
             GroupsPanel.Visibility = Visibility.Visible;
         }   
 
@@ -37,6 +37,32 @@ namespace SNRMS.View
                 case "Rotations":
                     RotationsPanel.Visibility = Visibility.Visible;
                     break;
+            }
+        }
+
+        private async void Logout_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            ContentDialog logoutDialog = new ContentDialog
+            {
+                Title = "Logout Confirmation",
+                Content = "Are you sure you want to log out of the system?",
+                PrimaryButtonText = "Logout",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot // Required in WinUI 3
+            };
+
+            // Style the primary button as red/destructive
+            logoutDialog.PrimaryButtonStyle = (Style)Application.Current.Resources["AccentButtonStyle"];
+
+            ContentDialogResult result = await logoutDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                if (DataContext is InstructorDashboardViewModel vm)
+                {
+                    vm.LogoutCommand.Execute(null);
+                }
             }
         }
     }

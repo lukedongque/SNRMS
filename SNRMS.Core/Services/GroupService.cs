@@ -19,8 +19,11 @@ namespace SNRMS.Core.Services
         {
             if (string.IsNullOrEmpty(groupName))
                 throw new ArgumentException("Group name is required.");
-            var hasGroup = await _dbContext.Groups.AnyAsync(g => g.GroupName == groupName && g.SectionId == sectionId);
-            if (hasGroup)
+            var exists = await _dbContext.Groups
+                .AnyAsync(g => g.GroupName == groupName
+                           && g.SectionId == sectionId
+                           && !g.IsArchived);  
+            if (exists)
                 throw new InvalidOperationException("Group name already exists in this section.");
             var section = await _dbContext.Sections.FindAsync(sectionId);
             if (section == null)
@@ -40,7 +43,7 @@ namespace SNRMS.Core.Services
             var section = await _dbContext.Sections.FindAsync(sectionId);
             if (section == null)
                 throw new InvalidOperationException("Section not found.");
-            return await _dbContext.Groups.AsNoTracking().Include(g => g.Students).Where(g => g.SectionId == sectionId).ToListAsync();
+            return await _dbContext.Groups.AsNoTracking().Include(g => g.Students.Where(s => !s.IsArchived)).Where(g => g.SectionId == sectionId && !g.IsArchived).ToListAsync();
         }
         public async Task<Group?> GetGroupByIdAsync(int groupId)
         {
@@ -59,6 +62,7 @@ namespace SNRMS.Core.Services
                 throw new InvalidOperationException("Cannot delete group with existing rotation assignments.");
             group.Students.ToList().ForEach(s => s.GroupId = null); 
             _dbContext.Groups.Remove(group);
+            group.IsArchived = true;
             await _dbContext.SaveChangesAsync();
             return group;
         }

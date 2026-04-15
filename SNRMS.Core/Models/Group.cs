@@ -12,5 +12,7 @@ namespace SNRMS.Core.Models
         public Section Section { get; set; } = null!;
         public ICollection<Student> Students { get; set; } = new List<Student>();
         public ICollection<RotationAssignment> RotationAssignments { get; set; } = new List<RotationAssignment>();
+        public bool IsArchived { get; set; } = false;
+
     }
 }

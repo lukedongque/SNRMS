@@ -113,7 +113,7 @@ namespace SNRMS.ViewModels
             try
             {
                 var sections = await _sectionService.GetAllSectionsAsync();
-                Sections.Clear();
+                Sections.Clear();   
                 foreach (var section in sections)
                     Sections.Add(section);
                 var instructors = await _instructorService.GetAllInstructorsAsync();

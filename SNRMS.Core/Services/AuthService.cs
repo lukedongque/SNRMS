@@ -27,7 +27,9 @@ namespace SNRMS.Core.Services
         public async Task<User?> LoginAsync(string username, string password)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) return null;
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+            var user = await _dbContext.Users
+                .Include(u => u.Instructor)
+                .FirstOrDefaultAsync(u => u.Username == username);
             if (user == null || user.Username != username)
                 return null;
 

@@ -15,5 +15,6 @@ namespace SNRMS.Core.Models
         public int? GroupId { get; set; }
         public Group? Group { get; set; }
         public ICollection<StudentRotationHistory> RotationHistory { get; set; } = new List<StudentRotationHistory>();
+        public bool IsArchived { get; set; } = false;
     }
 }

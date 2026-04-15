@@ -104,70 +104,103 @@ namespace SNRMS.ViewModels
         public partial string ErrorMessage { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string SuccessMessage { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string InstructorDisplayName { get; set; } = string.Empty;
 
+        [ObservableProperty]
+        public partial string InstructorEmployeeId { get; set; } = string.Empty;
 
+        [RelayCommand]
+        public void Logout()
+        {
+            SNRMS.Core.Services.SessionManager.Logout();
+            if (App.RootFrame != null)
+            {
+                App.RootFrame.Navigate(typeof(SNRMS.View.LoginPage));
+
+                App.RootFrame.BackStack.Clear();
+            }
+        }
         [RelayCommand]
         public async Task LoadDataAsync()
         {
+            var user = SessionManager.CurrentUser;
+            if (user == null || user.InstructorId == null)
+            {
+                ErrorMessage = "No active session found. Please log in.";
+                return;
+            }
             IsLoading = true;
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
             try
             {
-                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
-                var section = await _sectionService.GetInstructorSectionAsync(instructorId);
-                var groups = await _groupService.GetGroupBySectionAsync(section.SectionId);
-                var students = await _studentService.GetAllStudentsAsync();
-                var rotationassignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                if (user.Instructor != null)
+                {
+                    InstructorDisplayName = $"{user.Instructor.FirstName} {user.Instructor.LastName}";
+                    InstructorEmployeeId = $"ID: {user.Instructor.EmployeeId}";
+                }
+                else
+                {
+                    InstructorDisplayName = "Instructor Loaded (No Profile)";
+                    InstructorEmployeeId = $"ID: {user.InstructorId}";
+                }
+
+
+                // Always load hospitals and stations first — independent of section assignment
                 var allhospitals = await _hospitalService.GetAllHospitalsAsync();
                 Hospitals.Clear();
+                Stations.Clear();
                 foreach (var hospital in allhospitals)
+                {
                     Hospitals.Add(hospital);
+                    foreach (var station in hospital.Stations)
+                        Stations.Add(station);
+                }
+
+                // Load section-dependent data separately so a missing section
+                // does not prevent hospitals/stations from loading
+                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                Section? section = null;
+                try
+                {
+                    section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                }
+                catch
+                {
+                    // Instructor has no assigned section yet — leave groups/rotations empty
+                    Groups.Clear();
+                    Students.Clear();
+                    RotationAssignments.Clear();
+                    return;
+                }
+
+                // Load groups for the instructor's section
+                var groups = await _groupService.GetGroupBySectionAsync(section.SectionId);
                 Groups.Clear();
                 foreach (var group in groups)
-                {
                     Groups.Add(group);
-                }
                 if (_isGroupsSorted)
                     SortGroupsByName();
-                var hospitals = await _hospitalService.GetAllHospitalsAsync();
-                Stations.Clear();
-                foreach (var hospital in hospitals)
-                {
-                    foreach (var station in hospital.Stations)
-                    {
-                        Stations.Add(station);
-                    }
-                }
-                if (SelectedGroup != null)
-                {
-                    var studentsingroup = await _studentService.GetStudentsByGroupAsync(SelectedGroup.GroupId);
-                    Students.Clear();
-                    foreach (var student in studentsingroup)
-                    {
-                        Students.Add(student);
-                    }
 
-                }
+                // Load all students
+                var students = await _studentService.GetAllStudentsAsync();
                 Students.Clear();
                 foreach (var student in students)
-                {
                     Students.Add(student);
-                }
-                RotationAssignments.Clear();
-                foreach (var assignment in rotationassignments)
+
+                // Load rotation assignments — safely handle empty result
+                try
                 {
-                    RotationAssignments.Add(assignment);
+                    var rotationassignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                    RotationAssignments.Clear();
+                    foreach (var assignment in rotationassignments)
+                        RotationAssignments.Add(assignment);
                 }
-                //var allStudents = new List<Student>();
-                //foreach (var group in Groups)
-                //{
-                //    var groupStudents = await _studentService.GetStudentsByGroupAsync(group.GroupId);
-                //    allStudents.AddRange(groupStudents);
-                //}
-                //Students.Clear();
-                //foreach (var student in allStudents)
-                //    Students.Add(student);
+                catch
+                {
+                    RotationAssignments.Clear();
+                }
             }
             catch (Exception ex)
             {
@@ -330,12 +363,11 @@ namespace SNRMS.ViewModels
             }
             try
             {
-                var deletedStudent = await _studentService.DeleteStudentAsync(SelectedStudent.StudentId);
-                if (deletedStudent != null)
-                {
-                    Students.Remove(SelectedStudent);
-                    SelectedStudent = null;
-                }
+                await _studentService.DeleteStudentAsync(SelectedStudent.StudentId);
+                
+                Students.Remove(SelectedStudent);
+                SelectedStudent = null;
+
                 await LoadDataAsync();
                 SuccessMessage = "Student deleted successfully.";
             }
@@ -369,9 +401,12 @@ namespace SNRMS.ViewModels
                     Students[index] = updatedStudent;
                 }
 
+                
+
                 SuccessMessage = $"Transferred {updatedStudent.FirstName} to {GroupToTransfer.GroupName}.";
 
                 GroupToTransfer = null;
+                await LoadDataAsync();
             }
             catch (Exception ex)
             {
@@ -412,6 +447,7 @@ namespace SNRMS.ViewModels
                     RotationEndDate = DateTimeOffset.Now;
                     SelectedStation = null;
                 }
+                await LoadDataAsync();
                 SuccessMessage = "Rotation assignment created successfully.";
             }
             catch (Exception ex)
@@ -420,6 +456,7 @@ namespace SNRMS.ViewModels
             }
             finally { IsLoading = false; }
         }
+
         [RelayCommand]
         public async Task DeleteRotationAssignmentAsync()
         {
@@ -548,7 +585,8 @@ namespace SNRMS.ViewModels
                 {
                     var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
                     var section = await _sectionService.GetInstructorSectionAsync(instructorId);
-                    assignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                    try { assignments = await _rotationService.GetAssignmentBySection(section.SectionId); }
+                    catch { assignments = new List<RotationAssignment>(); }
                 }
                 else
                 {
@@ -576,7 +614,9 @@ namespace SNRMS.ViewModels
             {
                 var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
                 var section = await _sectionService.GetInstructorSectionAsync(instructorId);
-                var assignments = await _rotationService.GetAssignmentBySection(section.SectionId);
+                List<RotationAssignment> assignments;
+                try { assignments = await _rotationService.GetAssignmentBySection(section.SectionId); }
+                catch { assignments = new List<RotationAssignment>(); }
                 RotationAssignments.Clear();
                 foreach (var a in assignments)
                     RotationAssignments.Add(a);

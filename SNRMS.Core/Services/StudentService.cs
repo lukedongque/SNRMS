@@ -54,9 +54,10 @@ namespace SNRMS.Core.Services
             var hasAssignment = student.Group != null && student.Group.RotationAssignments.Any(ra => !ra.IsArchived);
             if (hasAssignment)
                 throw new InvalidOperationException("Cannot delete student with existing rotation assignments.");
+            student.IsArchived = true;
+            student.GroupId = null;
             if (user != null)
-                _dbContext.Users.Remove(user);
-            _dbContext.Students.Remove(student);
+                user.IsActive = false;  // deactivate user account
             await _dbContext.SaveChangesAsync();
             return student;
         }
@@ -69,7 +70,7 @@ namespace SNRMS.Core.Services
             return await _dbContext.Students
                     .Include(s => s.Group) 
                     .AsNoTracking()
-                    .Where(s => s.GroupId == groupId)
+                    .Where(s => s.GroupId == groupId && !s.IsArchived)
                     .ToListAsync();
         }
 
@@ -127,7 +128,7 @@ namespace SNRMS.Core.Services
 
         public async Task<List<Student>> GetAllStudentsAsync() //get all students
         {
-            return await _dbContext.Students.AsNoTracking().Include(s => s.Group).ToListAsync();
+            return await _dbContext.Students.AsNoTracking().Include(s => s.Group).Where(s => !s.IsArchived).ToListAsync();
         }
 
         public async Task<List<Student>> SearchStudentsAsync(string searchTerm) //search student by name or student number
