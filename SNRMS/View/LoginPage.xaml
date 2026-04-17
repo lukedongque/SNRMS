@@ -11,8 +11,8 @@
 
     <Grid>
         <Grid.Background>
-            <ImageBrush ImageSource="/Assets/nursing-student_KqxO4gK.jpg" />
-                
+            <ImageBrush ImageSource="/Assets/Gemini_Generated_Image_t90d6xt90d6xt90d.png" />
+
         </Grid.Background>
         <Border HorizontalAlignment="Center" VerticalAlignment="Center"
                 Width="380" Padding="40"
@@ -22,7 +22,7 @@
 
                 <!-- Title -->
                 <StackPanel HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="SNRMS" FontSize="32" FontWeight="Bold"
+                    <TextBlock Text="NurseSync" FontSize="32" FontWeight="Bold"
                                Foreground="#2B6CB0" HorizontalAlignment="Center"/>
                     <TextBlock Text="Student Nurse Rotation Management System" 
                                FontSize="11" Foreground="#718096" 

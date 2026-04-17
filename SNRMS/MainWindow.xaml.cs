@@ -33,6 +33,8 @@ namespace SNRMS
             InitializeComponent();
             SystemBackdrop = new MicaBackdrop();
             RootFrame.Navigate(typeof(LoginPage));
+            this.Title = "NurseSync";
+
         }
 
     }

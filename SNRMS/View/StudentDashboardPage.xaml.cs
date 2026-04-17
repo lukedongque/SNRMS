@@ -17,6 +17,8 @@ namespace SNRMS.View
             if (DataContext is StudentDashboardViewModel vm)
             {
                 _ = vm.LoadDataAsync();
+                RotationPanel.Visibility = Visibility.Visible;
+
 
             }
         }

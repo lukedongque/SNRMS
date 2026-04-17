@@ -39,6 +39,7 @@ namespace SNRMS.ViewModels
         public partial Group? StudentGroupFilter { get; set; }
         [ObservableProperty]
         public partial Group? GroupToTransfer { get; set; }
+        [ObservableProperty] public partial Student? SelectedGroupMember { get; set; }
 
         //STUDENTS ---------------------
         [ObservableProperty]
@@ -84,6 +85,9 @@ namespace SNRMS.ViewModels
 
         [ObservableProperty]
         public partial ObservableCollection<Group> Groups { get; set; } = new ObservableCollection<Group>();
+        [ObservableProperty]
+        public partial ObservableCollection<Student> GroupMembers { get; set; } = new ObservableCollection<Student>();
+
         [ObservableProperty]
         public partial ObservableCollection<Student> StudentsToCreate { get; set; } = new ObservableCollection<Student>();
         [ObservableProperty]
@@ -632,7 +636,7 @@ namespace SNRMS.ViewModels
         [RelayCommand]
         public async Task FilterStudentsByGroupAsync()
         {
-            if (SelectedGroup == null) return;
+            if (StudentGroupFilter == null) return;
             IsLoading = true;
             try
             {
@@ -648,6 +652,18 @@ namespace SNRMS.ViewModels
                 ErrorMessage = $"Error filtering students: {ex.Message}";
             }
             finally { IsLoading = false; }
+        }
+
+        [RelayCommand]
+
+        partial void OnSelectedGroupChanged(Group? value)
+        {
+            GroupMembers.Clear();
+            if (value != null)
+            {
+                foreach (var member in Students.Where(s => s.GroupId == value.GroupId))
+                    GroupMembers.Add(member);
+            }
         }
     }
 }

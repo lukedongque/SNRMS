@@ -24,13 +24,240 @@
             </NavigationView.FooterMenuItems>
 
             <NavigationView.MenuItems>
+                <NavigationViewItem Content="Analytics"   Tag="Analytics"   Icon="Repair"/>
                 <NavigationViewItem Content="Sections"    Tag="Sections"    Icon="ViewAll"/>
                 <NavigationViewItem Content="Instructors" Tag="Instructors" Icon="People"/>
                 <NavigationViewItem Content="Hospitals"   Tag="Hospitals"   Icon="Home" />
-                <NavigationViewItem Content="Analytics"   Tag="Analytics"   Icon="Repair"/>
             </NavigationView.MenuItems>
 
             <Grid Padding="32">
+                <!-- ANALYTICS PANEL -->
+                <ScrollViewer x:Name="AnalyticsPanel" Visibility="Collapsed"
+VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="24">
+
+                        <!-- Title -->
+                        <StackPanel>
+                            <TextBlock Text="Analytics" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+                            <TextBlock Text="System-wide overview of students, rotations, and hospitals"
+         FontSize="14" Foreground="#909191"/>
+                        </StackPanel>
+
+                        <!-- ── Summary Cards Row 1 ── -->
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Total Students -->
+                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20"
+      BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#2B9ED4"/>
+                                        <TextBlock Text="Total Students" FontSize="12"
+                     Foreground="#718096" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding TotalStudents, Mode=OneWay}"
+                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                    <TextBlock Text="Active, non-archived" FontSize="11" Foreground="#A0AEC0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Total Instructors -->
+                            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20"
+      BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE77B;" FontSize="18" Foreground="#805AD5"/>
+                                        <TextBlock Text="Instructors" FontSize="12"
+                     Foreground="#718096" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding TotalInstructors, Mode=OneWay}"
+                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                    <TextBlock Text="Active Instructor Accounts" FontSize="11" Foreground="#A0AEC0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Total Groups -->
+                            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20"
+      BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE902;" FontSize="18" Foreground="#38A169"/>
+                                        <TextBlock Text="Groups" FontSize="12"
+                     Foreground="#718096" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding TotalGroups, Mode=OneWay}"
+                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                    <TextBlock Text="Active groups" FontSize="11" Foreground="#A0AEC0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Unassigned Sections -->
+                            <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="20"
+      BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE7BA;" FontSize="18" Foreground="#E53E3E"/>
+                                        <TextBlock Text="Unassigned Sections" FontSize="12"
+                     Foreground="#718096" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding UnassignedSections, Mode=OneWay}"
+                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                    <TextBlock Text="No instructor assigned" FontSize="11" Foreground="#A0AEC0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- ── Charts Row ── -->
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Students per Section bar chart -->
+                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20"
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Text="Students per Section" FontWeight="SemiBold"
+                                               Foreground="#2D3748" FontSize="16"/>
+                                    <ItemsControl ItemsSource="{Binding StudentsPerSection}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,4" RowSpacing="3">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid Grid.Row="0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                         FontSize="12" Foreground="#4A5568"
+                                         VerticalAlignment="Center"/>   
+                                                        <TextBlock Grid.Column="1" Text="{Binding Value}"
+                                                                 FontSize="12" FontWeight="Bold"
+                                                                 Foreground="#1B3A6B"/>
+                                                    </Grid>
+                                                    <ProgressBar Grid.Row="1" Value="{Binding Value}"
+                                   Maximum="50" Height="8"
+                                   Foreground="#2B9ED4"
+                                   Background="#EBF8FF"
+                                   CornerRadius="4"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Rotations per Hospital bar chart -->
+                            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20"
+      BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Text="Rotations per Hospital" FontWeight="SemiBold"
+                 Foreground="#2D3748" FontSize="16"/>
+                                    <ItemsControl ItemsSource="{Binding RotationsPerHospital}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,4" RowSpacing="3">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid Grid.Row="0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                     FontSize="12" Foreground="#4A5568"
+                                     VerticalAlignment="Center"
+                                     TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Value}"
+                                     FontSize="12" FontWeight="Bold"
+                                     Foreground="#1B3A6B"/>
+                                                    </Grid>
+                                                    <ProgressBar Grid.Row="1" Value="{Binding Value}"
+                                   Maximum="20" Height="8"
+                                   Foreground="#805AD5"
+                                   Background="#FAF5FF"
+                                   CornerRadius="4"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- ── Day Slot Distribution card ── -->
+                        <Border Background="White" CornerRadius="12" Padding="20"
+  BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Rotation Distribution by Day Slot"
+             FontWeight="SemiBold" Foreground="#2D3748" FontSize="16"/>
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Mon-Tue -->
+                                    <Border Grid.Column="0" CornerRadius="10"
+              Background="#EBF8FF" Padding="20,16">
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <TextBlock Text="MON – TUE" FontSize="11" FontWeight="SemiBold"
+                         Foreground="#2B9ED4" CharacterSpacing="80"
+                         HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding SlotMonTue, Mode=OneWay}"
+                                         FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
+                                         HorizontalAlignment="Center"/>
+                                            <TextBlock Text="assignments" FontSize="11" Foreground="#718096"
+                         HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Wed-Thu -->
+                                    <Border Grid.Column="1" CornerRadius="10"
+              Background="#FAF5FF" Padding="20,16">
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <TextBlock Text="WED – THU" FontSize="11" FontWeight="SemiBold"
+                         Foreground="#805AD5" CharacterSpacing="80"
+                         HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding SlotWedThu, Mode=OneWay}"
+                                         FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
+                                         HorizontalAlignment="Center"/>
+                                            <TextBlock Text="assignments" FontSize="11" Foreground="#718096"
+                         HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Fri-Sat -->
+                                    <Border Grid.Column="2" CornerRadius="10"
+              Background="#F0FFF4" Padding="20,16">
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <TextBlock Text="FRI – SAT" FontSize="11" FontWeight="SemiBold"
+                         Foreground="#38A169" CharacterSpacing="80"
+                         HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding SlotFriSat, Mode=OneWay}"
+                                         FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
+                                         HorizontalAlignment="Center"/>
+                                            <TextBlock Text="assignments" FontSize="11" Foreground="#718096"
+                                          HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
 
                 <!-- SECTIONS PANEL -->
                 <StackPanel x:Name="SectionsPanel" Visibility="Collapsed" Spacing="20">
@@ -356,25 +583,25 @@
 
                                 <!-- Header + Sort + Search -->
                                 <TextBlock Text="All Hospitals" FontWeight="SemiBold" 
-                           Foreground="#2D3748" FontSize="16"/>
+                                           Foreground="#2D3748" FontSize="16"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                             Text="{Binding HospitalSearchName, Mode=TwoWay}"
-                             PlaceholderText="Search hospital..."
-                             Margin="0,0,8,0"/>
+                                             Text="{Binding HospitalSearchName, Mode=TwoWay}"
+                                             PlaceholderText="Search hospital..."
+                                             Margin="0,0,8,0"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                         <Button Content="Search" 
-                                Command="{Binding GetHospitalsByNameCommand}"
-                                Background="#E2E8F0" Foreground="#2D3748"
-                                CornerRadius="6" Padding="8,4"/>
+                                                Command="{Binding GetHospitalsByNameCommand}"
+                                                Background="#E2E8F0" Foreground="#2D3748"
+                                                CornerRadius="6" Padding="8,4"/>
                                         <Button Content="Sort A-Z" 
-                                Command="{Binding SortHospitalsByNameCommand}"
-                                Background="#E2E8F0" Foreground="#2D3748"
-                                CornerRadius="6" Padding="8,4"/>
+                                                Command="{Binding SortHospitalsByNameCommand}"
+                                                Background="#E2E8F0" Foreground="#2D3748"
+                                                CornerRadius="6" Padding="8,4"/>
                                     </StackPanel>
                                 </Grid>
 
@@ -385,16 +612,16 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Hospital" FontWeight="SemiBold" 
-                               Foreground="#718096" FontSize="12"/>
+                                                Foreground="#718096" FontSize="12"/>
                                     <TextBlock Grid.Column="1" Text="Address" FontWeight="SemiBold" 
-                               Foreground="#718096" FontSize="12"/>
+                                                Foreground="#718096" FontSize="12"/>
                                 </Grid>
                                 <Border Height="1" Background="#E2E8F0"/>
 
                                 <!-- List -->
                                 <ListView ItemsSource="{Binding Hospitals}"
-                          SelectedItem="{Binding SelectedHospital, Mode=TwoWay}"
-                          Height="300">
+                                          SelectedItem="{Binding SelectedHospital, Mode=TwoWay}"
+                                          Height="300">
                                     <ListView.ItemContainerStyle>
                                         <Style TargetType="ListViewItem">
                                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -409,29 +636,29 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="{Binding HospitalName}" 
-                                           FontWeight="SemiBold" Foreground="#2D3748"
-                                           VerticalAlignment="Center"/>
+                                                           FontWeight="SemiBold" Foreground="#2D3748"
+                                                           VerticalAlignment="Center"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding Address}" 
-                                           FontSize="12" Foreground="#718096"
-                                           VerticalAlignment="Center"/>
+                                                           FontSize="12" Foreground="#718096"
+                                                           VerticalAlignment="Center"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
 
                                 <Button Content="Delete Hospital" 
-                        Command="{Binding DeleteHospitalCommand}"
-                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                                        Command="{Binding DeleteHospitalCommand}"
+                                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </Border>
 
                         <!-- RIGHT: Stations List -->
                         <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20"
-                BorderBrush="#E2E8F0" BorderThickness="1">
+                                BorderBrush="#E2E8F0" BorderThickness="1">
                             <StackPanel Spacing="12">
 
                                 <TextBlock Text="Stations" FontWeight="SemiBold" 
-                           Foreground="#2D3748" FontSize="16"/>
+                                            Foreground="#2D3748" FontSize="16"/>
 
                                 <!-- Add Station Form -->
                                 <Grid>
@@ -467,8 +694,8 @@
 
                                 <!-- Stations List -->
                                 <ListView ItemsSource="{Binding SelectedHospitalStations}"
-                          SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
-                          Height="300">
+                                          SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                                          Height="300">
                                     <ListView.ItemContainerStyle>
                                         <Style TargetType="ListViewItem">
                                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -483,8 +710,8 @@
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Text="{Binding StationName}" 
-                                           FontWeight="SemiBold" Foreground="#2D3748"
-                                           VerticalAlignment="Center"/>
+                                                           FontWeight="SemiBold" Foreground="#2D3748"
+                                                           VerticalAlignment="Center"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding Capacity}" 
                                            FontSize="12" Foreground="#718096"
                                            VerticalAlignment="Center"/>
@@ -502,233 +729,7 @@
 
                   
                 </StackPanel>
-                <!-- ANALYTICS PANEL -->
-                <ScrollViewer x:Name="AnalyticsPanel" Visibility="Collapsed"
-              VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="24">
-
-                        <!-- Title -->
-                        <StackPanel>
-                            <TextBlock Text="Analytics" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
-                            <TextBlock Text="System-wide overview of students, rotations, and hospitals"
-                       FontSize="14" Foreground="#909191"/>
-                        </StackPanel>
-
-                        <!-- ── Summary Cards Row 1 ── -->
-                        <Grid ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Total Students -->
-                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20"
-                    BorderBrush="#E2E8F0" BorderThickness="1">
-                                <StackPanel Spacing="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#2B9ED4"/>
-                                        <TextBlock Text="Total Students" FontSize="12"
-                                   Foreground="#718096" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding TotalStudents, Mode=OneWay}"
-                               FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
-                                    <TextBlock Text="Active, non-archived" FontSize="11" Foreground="#A0AEC0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Total Instructors -->
-                            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20"
-                    BorderBrush="#E2E8F0" BorderThickness="1">
-                                <StackPanel Spacing="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE77B;" FontSize="18" Foreground="#805AD5"/>
-                                        <TextBlock Text="Instructors" FontSize="12"
-                                   Foreground="#718096" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding TotalInstructors, Mode=OneWay}"
-                               FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
-                                    <TextBlock Text="Registered accounts" FontSize="11" Foreground="#A0AEC0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Total Groups -->
-                            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20"
-                    BorderBrush="#E2E8F0" BorderThickness="1">
-                                <StackPanel Spacing="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE902;" FontSize="18" Foreground="#38A169"/>
-                                        <TextBlock Text="Groups" FontSize="12"
-                                   Foreground="#718096" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding TotalGroups, Mode=OneWay}"
-                               FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
-                                    <TextBlock Text="Active groups" FontSize="11" Foreground="#A0AEC0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Unassigned Sections -->
-                            <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="20"
-                    BorderBrush="#E2E8F0" BorderThickness="1">
-                                <StackPanel Spacing="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE7BA;" FontSize="18" Foreground="#E53E3E"/>
-                                        <TextBlock Text="Unassigned Sections" FontSize="12"
-                                   Foreground="#718096" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding UnassignedSections, Mode=OneWay}"
-                               FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
-                                    <TextBlock Text="No instructor assigned" FontSize="11" Foreground="#A0AEC0"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-                        <!-- ── Charts Row ── -->
-                        <Grid ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Students per Section bar chart -->
-                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20"
-                    BorderBrush="#E2E8F0" BorderThickness="1">
-                                <StackPanel Spacing="14">
-                                    <TextBlock Text="Students per Section" FontWeight="SemiBold"
-                               Foreground="#2D3748" FontSize="16"/>
-                                    <ItemsControl ItemsSource="{Binding StudentsPerSection}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,4" RowSpacing="3">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-                                                    <Grid Grid.Row="0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Label}"
-                                                   FontSize="12" Foreground="#4A5568"
-                                                   VerticalAlignment="Center"/>
-                                                        <TextBlock Grid.Column="1" Text="{Binding Value}"
-                                                   FontSize="12" FontWeight="Bold"
-                                                   Foreground="#1B3A6B"/>
-                                                    </Grid>
-                                                    <ProgressBar Grid.Row="1" Value="{Binding Value}"
-                                                 Maximum="50" Height="8"
-                                                 Foreground="#2B9ED4"
-                                                 Background="#EBF8FF"
-                                                 CornerRadius="4"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Rotations per Hospital bar chart -->
-                            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20"
-                    BorderBrush="#E2E8F0" BorderThickness="1">
-                                <StackPanel Spacing="14">
-                                    <TextBlock Text="Rotations per Hospital" FontWeight="SemiBold"
-                               Foreground="#2D3748" FontSize="16"/>
-                                    <ItemsControl ItemsSource="{Binding RotationsPerHospital}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,4" RowSpacing="3">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-                                                    <Grid Grid.Row="0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Label}"
-                                                   FontSize="12" Foreground="#4A5568"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Grid.Column="1" Text="{Binding Value}"
-                                                   FontSize="12" FontWeight="Bold"
-                                                   Foreground="#1B3A6B"/>
-                                                    </Grid>
-                                                    <ProgressBar Grid.Row="1" Value="{Binding Value}"
-                                                 Maximum="20" Height="8"
-                                                 Foreground="#805AD5"
-                                                 Background="#FAF5FF"
-                                                 CornerRadius="4"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-                        <!-- ── Day Slot Distribution card ── -->
-                        <Border Background="White" CornerRadius="12" Padding="20"
-                BorderBrush="#E2E8F0" BorderThickness="1">
-                            <StackPanel Spacing="14">
-                                <TextBlock Text="Rotation Distribution by Day Slot"
-                           FontWeight="SemiBold" Foreground="#2D3748" FontSize="16"/>
-                                <Grid ColumnSpacing="16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <!-- Mon-Tue -->
-                                    <Border Grid.Column="0" CornerRadius="10"
-                            Background="#EBF8FF" Padding="20,16">
-                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="MON – TUE" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="#2B9ED4" CharacterSpacing="80"
-                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding SlotMonTue, Mode=OneWay}"
-                                                       FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
-                                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="assignments" FontSize="11" Foreground="#718096"
-                                       HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <!-- Wed-Thu -->
-                                    <Border Grid.Column="1" CornerRadius="10"
-                            Background="#FAF5FF" Padding="20,16">
-                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="WED – THU" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="#805AD5" CharacterSpacing="80"
-                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding SlotWedThu, Mode=OneWay}"
-                                                       FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
-                                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="assignments" FontSize="11" Foreground="#718096"
-                                       HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <!-- Fri-Sat -->
-                                    <Border Grid.Column="2" CornerRadius="10"
-                            Background="#F0FFF4" Padding="20,16">
-                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                            <TextBlock Text="FRI – SAT" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="#38A169" CharacterSpacing="80"
-                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding SlotFriSat, Mode=OneWay}"
-                                                       FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
-                                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="assignments" FontSize="11" Foreground="#718096"
-                                                        HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
+                
                 <!-- Error Message -->
                 <TextBlock HorizontalAlignment ="Center" Text="{Binding ErrorMessage}" Foreground="#E53E3E" 
                            VerticalAlignment="Bottom" Margin="0,0,0,16"/>

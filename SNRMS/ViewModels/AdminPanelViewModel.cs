@@ -643,7 +643,7 @@ namespace SNRMS.ViewModels
                 var today = DateOnly.FromDateTime(DateTime.Today);
                 // Summary counts
                 TotalStudents    = await App.Database.Students.CountAsync(s => !s.IsArchived);
-                TotalInstructors = await App.Database.Instructors.CountAsync();
+                TotalInstructors = await App.Database.Instructors.Where(i => i.User != null && i.User.IsActive == true).CountAsync();
                 TotalGroups      = await App.Database.Groups.CountAsync(g => !g.IsArchived);
                 TotalHospitals   = await App.Database.Hospitals.CountAsync();
                 TotalStations    = await App.Database.Stations.CountAsync();
@@ -660,7 +660,7 @@ namespace SNRMS.ViewModels
                 foreach (var sec in sections.OrderBy(s => s.SectionName))
                 {
                     var count = sec.Groups.Sum(g => g.Students.Count(st => !st.IsArchived));
-                    StudentsPerSection.Add(new AnalyticsBarItem(sec.SectionName, count));
+                    StudentsPerSection.Add(new AnalyticsBarItem($"{sec.SectionName} | Year: {sec.YearLevel}", count));
                 }
 
                 // Rotations per hospital
@@ -671,7 +671,7 @@ namespace SNRMS.ViewModels
                 foreach (var hosp in hospitals.OrderBy(h => h.HospitalName))
                 {
                     var count = hosp.Stations.Sum(st => st.RotationAssignments.Count(r => !r.IsArchived));
-                    RotationsPerHospital.Add(new AnalyticsBarItem(hosp.HospitalName, count));
+                    RotationsPerHospital.Add(new AnalyticsBarItem($"{hosp.HospitalName} | {hosp.Address}", count));
                 }
 
                 // Rotations by day slot
