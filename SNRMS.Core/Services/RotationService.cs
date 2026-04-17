@@ -1,9 +1,10 @@
-﻿using SNRMS.Core.Data;
+﻿using DocumentFormat.OpenXml.InkML;
+using Microsoft.EntityFrameworkCore;
+using SNRMS.Core.Data;
 using SNRMS.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 namespace SNRMS.Core.Services
 {
     public class RotationService
@@ -70,7 +71,7 @@ namespace SNRMS.Core.Services
                 .Include(ra => ra.Station)
                     .ThenInclude(s => s.Hospital)
                 .Include(ra => ra.Group)
-                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId) && !ra.IsArchived)
+                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId) && !ra.IsArchived && ra.StartDate > today)
                 .OrderBy(ra => ra.StartDate)
                 .FirstOrDefaultAsync();
         }
@@ -106,18 +107,36 @@ namespace SNRMS.Core.Services
             return assignments;
 
         }
-
+        public async Task<List<RotationAssignment>> GetStudentAllAssignmentsAsync(int studentId)
+        {
+            return await _dbContext.StudentRotationHistories
+                .Where(h => h.StudentId == studentId)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Station).ThenInclude(s => s.Hospital)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Group)
+                .Select(h => h.RotationAssignment)
+                .Where(r => !r.IsArchived)
+                .OrderBy(r => r.StartDate)
+                .ToListAsync();
+        }
         public async Task<List<RotationAssignment>> GetStudentRotationHistoryAsync(int studentId)
         {
-            var studentAssignmentHistory = await _dbContext.StudentRotationHistories.Where(sah => sah.StudentId == studentId)
-                .Include(sah => sah.RotationAssignment)
-                .ThenInclude(ra => ra.Station)
-                .Select(sah => sah.RotationAssignment)
-                .Distinct()
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            var history = await _dbContext.StudentRotationHistories
+                .Where(h => h.StudentId == studentId)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Station)
+                    .ThenInclude(s => s.Hospital)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Group)
+                .Select(h => h.RotationAssignment)
+                .Where(r => !r.IsArchived && r.EndDate < today)   
+                .OrderByDescending(r => r.EndDate)
                 .ToListAsync();
-            if (studentAssignmentHistory.Count == 0)
-                throw new ArgumentException("No rotation assignment found for this student.");
-            return studentAssignmentHistory;
+
+            return history;
         }
         public async Task<RotationAssignment?> DeleteRotationAssignmentAsync(int rotationassignmentId)
         {

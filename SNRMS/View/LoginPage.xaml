@@ -9,7 +9,11 @@
         <viewmodels:LoginViewModel />
     </Page.DataContext>
 
-    <Grid Background="#F0F4F8">
+    <Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource="/Assets/nursing-student_KqxO4gK.jpg" />
+                
+        </Grid.Background>
         <Border HorizontalAlignment="Center" VerticalAlignment="Center"
                 Width="380" Padding="40"
                 Background="White" CornerRadius="16"

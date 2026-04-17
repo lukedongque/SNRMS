@@ -101,6 +101,32 @@ namespace SNRMS.ViewModels
         };
         public List<string> SortChoicesList { get; } = new List<string> { "Name", "Year Level" };
 
+        // ── ANALYTICS ──────────────────────────────────────────────────
+        // Summary cards
+        [ObservableProperty] public partial int TotalStudents    { get; set; }
+        [ObservableProperty] public partial int TotalInstructors { get; set; }
+        [ObservableProperty] public partial int TotalGroups      { get; set; }
+        [ObservableProperty] public partial int TotalHospitals   { get; set; }
+        [ObservableProperty] public partial int TotalStations    { get; set; }
+        [ObservableProperty] public partial int TotalRotations   { get; set; }
+        [ObservableProperty] public partial int ActiveRotations  { get; set; }
+        [ObservableProperty] public partial int UnassignedSections { get; set; }
+
+        // Bar chart: students per section (list of label+value)
+        [ObservableProperty]
+        public partial ObservableCollection<AnalyticsBarItem> StudentsPerSection { get; set; } = new();
+
+        // Bar chart: rotations per hospital
+        [ObservableProperty]
+        public partial ObservableCollection<AnalyticsBarItem> RotationsPerHospital { get; set; } = new();
+
+        // Day slot distribution
+        [ObservableProperty]
+        public partial ObservableCollection<AnalyticsBarItem> RotationsByDaySlot { get; set; } = new();
+        [ObservableProperty] public partial int SlotMonTue { get; set; }
+        [ObservableProperty] public partial int SlotWedThu { get; set; }
+        [ObservableProperty] public partial int SlotFriSat { get; set; }
+
 
 
         // LOAD DATA COMMANDS ----------------------------------------------------------------------
@@ -131,6 +157,8 @@ namespace SNRMS.ViewModels
                 Hospitals.Clear();
                 foreach (var hospital in hospitals)
                     Hospitals.Add(hospital);
+                await LoadAnalyticsAsync();
+
             }
             catch (Exception ex)
             {
@@ -604,8 +632,78 @@ namespace SNRMS.ViewModels
         }
 
          
+        // ── ANALYTICS LOAD COMMAND ────────────────────────────────────
+        [RelayCommand]
+        public async Task LoadAnalyticsAsync()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                // Summary counts
+                TotalStudents    = await App.Database.Students.CountAsync(s => !s.IsArchived);
+                TotalInstructors = await App.Database.Instructors.CountAsync();
+                TotalGroups      = await App.Database.Groups.CountAsync(g => !g.IsArchived);
+                TotalHospitals   = await App.Database.Hospitals.CountAsync();
+                TotalStations    = await App.Database.Stations.CountAsync();
+                TotalRotations   = await App.Database.RotationAssignments.CountAsync(r => !r.IsArchived);
+                ActiveRotations  = await App.Database.RotationAssignments
+                    .CountAsync(r => !r.IsArchived && r.StartDate <= today && r.EndDate >= today);
+                UnassignedSections = await App.Database.Sections.CountAsync(s => s.InstructorId == null);
 
+                // Students per section
+                var sections = await App.Database.Sections
+                    .Include(s => s.Groups).ThenInclude(g => g.Students)
+                    .ToListAsync();
+                StudentsPerSection.Clear();
+                foreach (var sec in sections.OrderBy(s => s.SectionName))
+                {
+                    var count = sec.Groups.Sum(g => g.Students.Count(st => !st.IsArchived));
+                    StudentsPerSection.Add(new AnalyticsBarItem(sec.SectionName, count));
+                }
 
-        
+                // Rotations per hospital
+                var hospitals = await App.Database.Hospitals
+                    .Include(h => h.Stations).ThenInclude(st => st.RotationAssignments)
+                    .ToListAsync();
+                RotationsPerHospital.Clear();
+                foreach (var hosp in hospitals.OrderBy(h => h.HospitalName))
+                {
+                    var count = hosp.Stations.Sum(st => st.RotationAssignments.Count(r => !r.IsArchived));
+                    RotationsPerHospital.Add(new AnalyticsBarItem(hosp.HospitalName, count));
+                }
+
+                // Rotations by day slot
+                var allRotations = await App.Database.RotationAssignments
+                    .Where(r => !r.IsArchived).ToListAsync();
+                RotationsByDaySlot.Clear();
+                SlotMonTue = allRotations.Count(r => r.DaySlot == "Mon-Tue");
+                SlotWedThu = allRotations.Count(r => r.DaySlot == "Wed-Thu");
+                SlotFriSat = allRotations.Count(r => r.DaySlot == "Fri-Sat");
+
+                RotationsByDaySlot.Clear();
+                RotationsByDaySlot.Add(new AnalyticsBarItem("Mon-Tue", SlotMonTue));
+                RotationsByDaySlot.Add(new AnalyticsBarItem("Wed-Thu", SlotWedThu));
+                RotationsByDaySlot.Add(new AnalyticsBarItem("Fri-Sat", SlotFriSat));
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load analytics: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        //SESSION MANAGEMENT COMMANDS ----------------------------------------------------------------------
+        [RelayCommand]
+        public void Logout()
+        {
+            SessionManager.Logout();
+        }
     }
 }
+
+

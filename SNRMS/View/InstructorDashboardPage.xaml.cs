@@ -49,10 +49,9 @@ namespace SNRMS.View
                 PrimaryButtonText = "Logout",
                 CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Close,
-                XamlRoot = this.XamlRoot // Required in WinUI 3
+                XamlRoot = this.XamlRoot 
             };
 
-            // Style the primary button as red/destructive
             logoutDialog.PrimaryButtonStyle = (Style)Application.Current.Resources["AccentButtonStyle"];
 
             ContentDialogResult result = await logoutDialog.ShowAsync();
