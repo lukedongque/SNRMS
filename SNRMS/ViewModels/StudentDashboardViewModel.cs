@@ -26,6 +26,12 @@ namespace SNRMS.ViewModels
         public partial string StudentDisplayName { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string StudentNumber { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string StudentGroupName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string StudentSectionName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial int StudentYearLevel { get; set; }
 
         // ROTATION ASSIGNMENT ----------------------------------------------------------
         [ObservableProperty]
@@ -87,6 +93,9 @@ namespace SNRMS.ViewModels
                 {
                     StudentDisplayName = $"{student.FirstName} {student.LastName}";
                     StudentNumber = student.StudentNumber;
+                    StudentGroupName = student.Group?.GroupName ?? "No Group";
+                    StudentSectionName = student.Group?.Section?.SectionName ?? "No Section";
+                    StudentYearLevel = student.Group?.Section?.YearLevel ?? 0;
                 }
 
                 // Load current rotation (safe — no throw)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="SNRMS.View.LoginPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -23,7 +23,7 @@
                 <!-- Title -->
                 <StackPanel HorizontalAlignment="Center" Spacing="4">
                     <TextBlock Text="NurseSync" FontSize="32" FontWeight="Bold"
-                               Foreground="#2B6CB0" HorizontalAlignment="Center"/>
+                               Foreground="#1B3A6B" HorizontalAlignment="Center"/>
                     <TextBlock Text="Student Nurse Rotation Management System" 
                                FontSize="11" Foreground="#718096" 
                                HorizontalAlignment="Center" TextWrapping="Wrap"
@@ -52,7 +52,7 @@
                 <Button Content="Login" 
                         HorizontalAlignment="Stretch"
                         Command="{Binding LoginCommand}"
-                        Background="#2B6CB0"
+                        Background="#1B3A6B"
                         Foreground="White"
                         CornerRadius="8"
                         Padding="0,12,0,12"/>

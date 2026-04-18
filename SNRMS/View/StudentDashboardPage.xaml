@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="SNRMS.View.StudentDashboardPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -26,19 +26,25 @@
                     <FontIcon Grid.Column="0"
                               Glyph="&#xE77B;"
                               FontSize="16"
-                              Foreground="#2B9ED4"
+                              Foreground="#1B3A6B"
                               VerticalAlignment="Center"
                               Margin="0,0,12,0"/>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
                         <TextBlock Text="{Binding StudentDisplayName, Mode=OneWay}"
                                    FontWeight="Bold" FontSize="14"
                                    Foreground="#1B3A6B"
-                                   TextTrimming="CharacterEllipsis"
-                                   TextWrapping="NoWrap"/>
+                                   TextTrimming="CharacterEllipsis"/>
                         <TextBlock Text="{Binding StudentNumber, Mode=OneWay}"
                                    FontSize="11" Foreground="#718096"
-                                   TextTrimming="CharacterEllipsis"
-                                   TextWrapping="NoWrap"/>
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock FontSize="11" Foreground="#718096" TextTrimming="CharacterEllipsis">
+                            <Run Text="BSN"/>
+                            <Run Text="{Binding StudentYearLevel}"/>
+                            <Run Text=" . "/>
+                            <Run Text="{Binding StudentSectionName, Mode=OneWay}"/>
+                            <Run Text=" · "/>
+                            <Run Text="{Binding StudentGroupName, Mode=OneWay}"/>
+                        </TextBlock>
                     </StackPanel>
                 </Grid>
             </NavigationView.PaneFooter>
@@ -102,7 +108,7 @@
                                     <Border Grid.Column="1" Background="#EBF8FF"
                                             CornerRadius="20" Padding="12,6">
                                         <TextBlock Text="{Binding CurrentDaySlot, Mode=OneWay}"
-                                                   FontWeight="SemiBold" Foreground="#2B9ED4" FontSize="13"/>
+                                                   FontWeight="SemiBold" Foreground="#1B3A6B" FontSize="13"/>
                                     </Border>
                                 </Grid>
 
@@ -280,7 +286,7 @@
                                                             CornerRadius="6" Padding="8,4"
                                                             HorizontalAlignment="Left">
                                                         <TextBlock Text="{Binding DaySlot}"
-                                                                   FontWeight="SemiBold" Foreground="#2B9ED4"
+                                                                   FontWeight="SemiBold" Foreground="#1B3A6B"
                                                                    FontSize="12"/>
                                                     </Border>
 
@@ -375,7 +381,7 @@
                                                             CornerRadius="6" Padding="8,4"
                                                             HorizontalAlignment="Left">
                                                         <TextBlock Text="{Binding DaySlot}"
-                                                                   FontWeight="SemiBold" Foreground="#805AD5"
+                                                                   FontWeight="SemiBold" Foreground="#718096"
                                                                    FontSize="12"/>
                                                     </Border>
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">

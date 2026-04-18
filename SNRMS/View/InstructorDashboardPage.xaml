@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="SNRMS.View.InstructorDashboardPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -25,7 +25,7 @@
                     <FontIcon Grid.Column="0" 
                   Glyph="&#xE77B;" 
                   FontSize="16" 
-                  Foreground="#2B9ED4" 
+                  Foreground="#1B3A6B" 
                   VerticalAlignment="Center" 
                   Margin="0,0,12,0"/>
 
@@ -82,7 +82,7 @@
                                          Width="200" PlaceholderText="e.g. Group 1"/>
                                 <Button Content="Create Group" VerticalAlignment="Bottom"
                                         Command="{Binding CreateGroupCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -233,7 +233,7 @@
                                     </ComboBox>
                                     <Button Content="Transfer" VerticalAlignment="Bottom"
                                             Command="{Binding TransferStudentCommand}"
-                                            Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                            Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                                 </StackPanel>
                                 
                             </StackPanel>
@@ -269,7 +269,7 @@
                                          Width="150" PlaceholderText="e.g. 2021-0001"/>
                                 <Button Content="Add Student" VerticalAlignment="Bottom"
                                         Command="{Binding CreateStudentCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -370,7 +370,7 @@
                                             <TextBlock Grid.Column="4" 
                                                        Text="{Binding Group.GroupName}" 
                                                        FontSize="12"
-                                                       Foreground="#2B9ED4"
+                                                       Foreground="#1B3A6B"
                                                        VerticalAlignment="Center"/>
                                             
                                         </Grid>
@@ -393,7 +393,7 @@
                                 </ComboBox>
                                 <Button Content="Transfer" VerticalAlignment="Bottom"
                                         Command="{Binding TransferStudentCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -488,7 +488,7 @@
                             <!-- Row 3: Create Button -->
                             <Button Content="Create Assignment"
                                     Command="{Binding CreateRotationAssignmentCommand}"
-                                    Background="#2B9ED4" Foreground="White"
+                                    Background="#1B3A6B" Foreground="White"
                                     CornerRadius="8" Padding="16,8"
                                     HorizontalAlignment="Right"/>
                         </StackPanel>

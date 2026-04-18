@@ -67,29 +67,29 @@ namespace SNRMS.Core.Services
         public async Task<RotationAssignment?> GetNextRotationAssignment(int studentId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
-            return await _dbContext.RotationAssignments
-                .Include(ra => ra.Station)
-                    .ThenInclude(s => s.Hospital)
-                .Include(ra => ra.Group)
-                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId) && !ra.IsArchived && ra.StartDate > today)
-                .OrderBy(ra => ra.StartDate)
+            return await _dbContext.StudentRotationHistories
+                .Where(h => h.StudentId == studentId)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Station).ThenInclude(s => s.Hospital)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Group)
+                .Select(h => h.RotationAssignment)
+                .Where(r => !r.IsArchived && r.StartDate > today)
+                .OrderBy(r => r.StartDate)
                 .FirstOrDefaultAsync();
         }
         public async Task<RotationAssignment?> GetCurrentRotationAssignmentAsync(int studentId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var rotationassignment = await _dbContext.RotationAssignments
-                .Include(ra => ra.Station)
-                    .ThenInclude(s => s.Hospital)
-                .Include(ra => ra.Group)
-                .Where(ra => ra.Group.Students.Any(s => s.StudentId == studentId)
-                        && ra.StartDate <= today
-                        && ra.EndDate >= today
-                        && !ra.IsArchived)
+            return await _dbContext.StudentRotationHistories
+                .Where(h => h.StudentId == studentId)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Station).ThenInclude(s => s.Hospital)
+                .Include(h => h.RotationAssignment)
+                    .ThenInclude(r => r.Group)
+                .Select(h => h.RotationAssignment)
+                .Where(r => !r.IsArchived && r.StartDate <= today && r.EndDate >= today)
                 .FirstOrDefaultAsync();
-            if (rotationassignment == null)
-                throw new InvalidOperationException("No current rotation assignment found for the student.");
-            return rotationassignment;
         }
         public async Task<List<RotationAssignment>> GetAssignmentBySection(int sectionId)
         {

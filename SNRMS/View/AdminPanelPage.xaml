@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="SNRMS.View.AdminPanelPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -33,7 +33,7 @@
             <Grid Padding="32">
                 <!-- ANALYTICS PANEL -->
                 <ScrollViewer x:Name="AnalyticsPanel" Visibility="Collapsed"
-VerticalScrollBarVisibility="Auto">
+                              VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="24">
 
                         <!-- Title -->
@@ -57,7 +57,7 @@ VerticalScrollBarVisibility="Auto">
       BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#2B9ED4"/>
+                                        <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#1B3A6B"/>
                                         <TextBlock Text="Total Students" FontSize="12"
                      Foreground="#718096" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -72,7 +72,7 @@ VerticalScrollBarVisibility="Auto">
       BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE77B;" FontSize="18" Foreground="#805AD5"/>
+                                        <FontIcon Glyph="&#xE77B;" FontSize="18" Foreground="#718096"/>
                                         <TextBlock Text="Instructors" FontSize="12"
                      Foreground="#718096" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -148,7 +148,7 @@ VerticalScrollBarVisibility="Auto">
                                                     </Grid>
                                                     <ProgressBar Grid.Row="1" Value="{Binding Value}"
                                    Maximum="50" Height="8"
-                                   Foreground="#2B9ED4"
+                                   Foreground="#1B3A6B"
                                    Background="#EBF8FF"
                                    CornerRadius="4"/>
                                                 </Grid>
@@ -187,7 +187,7 @@ VerticalScrollBarVisibility="Auto">
                                                     </Grid>
                                                     <ProgressBar Grid.Row="1" Value="{Binding Value}"
                                    Maximum="20" Height="8"
-                                   Foreground="#805AD5"
+                                   Foreground="#718096"
                                    Background="#FAF5FF"
                                    CornerRadius="4"/>
                                                 </Grid>
@@ -215,7 +215,7 @@ VerticalScrollBarVisibility="Auto">
               Background="#EBF8FF" Padding="20,16">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
                                             <TextBlock Text="MON – TUE" FontSize="11" FontWeight="SemiBold"
-                         Foreground="#2B9ED4" CharacterSpacing="80"
+                         Foreground="#1B3A6B" CharacterSpacing="80"
                          HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding SlotMonTue, Mode=OneWay}"
                                          FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
@@ -229,7 +229,7 @@ VerticalScrollBarVisibility="Auto">
               Background="#FAF5FF" Padding="20,16">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
                                             <TextBlock Text="WED – THU" FontSize="11" FontWeight="SemiBold"
-                         Foreground="#805AD5" CharacterSpacing="80"
+                         Foreground="#718096" CharacterSpacing="80"
                          HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding SlotWedThu, Mode=OneWay}"
                                          FontSize="40" FontWeight="Bold" Foreground="#1B3A6B"
@@ -285,7 +285,7 @@ VerticalScrollBarVisibility="Auto">
                                 <Button Content="Create Section" 
                                         VerticalAlignment="Bottom"
                                         Command="{Binding CreateSectionCommand}"
-                                        Background="#2B9ED4"
+                                        Background="#1B3A6B"
                                         Foreground="White"
                                         CornerRadius="8"/>
                             </StackPanel>
@@ -308,9 +308,25 @@ VerticalScrollBarVisibility="Auto">
                                 </ComboBox>
                                 <Button FontSize="12" Content="Sort" VerticalAlignment="Bottom" Height="28"
                                         Command="{Binding SortSectionsCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="6"/>          
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="6"/>          
 
                             </StackPanel>
+                            <Grid Padding="8,4" Background="#F7FAFC">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Section Name" FontWeight="SemiBold" 
+                                            Foreground="#718096" FontSize="12"/>
+                                <TextBlock Grid.Column="1" Text="Year Level" FontWeight="SemiBold" 
+                                            Foreground="#718096" FontSize="12"/>
+                                <TextBlock Grid.Column="2" Text="Assigned Instructor" FontWeight="SemiBold" 
+                                            Foreground="#718096" FontSize="12"/>
+                            </Grid>
+                            <Border Height="1" Background="#E2E8F0"/>
+
+
                             <ListView ItemsSource="{Binding Sections}"
                                       SelectedItem="{Binding SelectedSection, Mode=TwoWay}"
                                       Height="250">
@@ -340,10 +356,10 @@ VerticalScrollBarVisibility="Auto">
                                             <!-- Instructor -->
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
                                                 <TextBlock Text="{Binding Instructor.FirstName}" 
-                                                   FontSize="12" Foreground="#2B9ED4"
+                                                   FontSize="12" Foreground="#1B3A6B"
                                                    VerticalAlignment="Center"/>
                                                 <TextBlock Text="{Binding Instructor.LastName}" 
-                                                   FontSize="12" Foreground="#2B9ED4"
+                                                   FontSize="12" Foreground="#1B3A6B"
                                                    VerticalAlignment="Center"/>
                                             </StackPanel>
 
@@ -376,7 +392,7 @@ VerticalScrollBarVisibility="Auto">
                                 </ComboBox>
                                 <Button Content="Assign" VerticalAlignment="Bottom"
                                         Command="{Binding AssignInstructorToSectionCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                                 <Button Content="Unassign" VerticalAlignment="Bottom"
                                         Command="{Binding UnassignInstructorCommand}"
                                         Background="#718096" Foreground="White" CornerRadius="8"/>
@@ -413,7 +429,7 @@ VerticalScrollBarVisibility="Auto">
                                          Width="150" PlaceholderText="e.g. EMP001"/>
                                     <Button Content="Create" VerticalAlignment="Bottom"
                                         Command="{Binding CreateInstructorCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>  
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>  
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -563,7 +579,7 @@ VerticalScrollBarVisibility="Auto">
                                 <Button Grid.Column="2" Content="Create Hospital" 
                         VerticalAlignment="Bottom"
                         Command="{Binding CreateHospitalCommand}"
-                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -609,7 +625,7 @@ VerticalScrollBarVisibility="Auto">
                                 <Grid Padding="8,4" Background="#F7FAFC">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="245"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Hospital" FontWeight="SemiBold" 
                                                 Foreground="#718096" FontSize="12"/>
@@ -676,14 +692,14 @@ VerticalScrollBarVisibility="Auto">
                                     <Button Grid.Column="2" Content="Add" 
                                         VerticalAlignment="Bottom"
                                         Command="{Binding AddStationCommand}"
-                                        Background="#2B9ED4" Foreground="White" CornerRadius="8"/>
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                                 </Grid>
 
                                 <!-- Column Headers -->
                                 <Grid Padding="8,4" Background="#F7FAFC">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="275"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Station" FontWeight="SemiBold" 
                                Foreground="#718096" FontSize="12"/>

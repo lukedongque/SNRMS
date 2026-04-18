@@ -77,7 +77,9 @@ namespace SNRMS.Core.Services
         public async Task<Student?> GetStudentByIdAsync(int studentId) //get student by id
         {
             var student = await _dbContext.Students
+                .AsNoTracking()
                 .Include(s => s.Group)
+                    .ThenInclude(g => g.Section)
                 .FirstOrDefaultAsync(s => s.StudentId == studentId);
             if (student == null)
                 throw new ArgumentException("Student not found");
