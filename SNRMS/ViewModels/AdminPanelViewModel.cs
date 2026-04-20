@@ -528,13 +528,18 @@ namespace SNRMS.ViewModels
             foreach (var hospital in sorted)
                 Hospitals.Add(hospital);
         }
-        [RelayCommand]
         partial void OnSelectedHospitalChanged(Hospital? value)
         {
+            _ = LoadStationsForHospitalAsync(value);
+        }
+
+        private async Task LoadStationsForHospitalAsync(Hospital? hospital)
+        {
             SelectedHospitalStations.Clear();
-            if (value != null)
-                foreach (var station in value.Stations)
-                    SelectedHospitalStations.Add(station);
+            if (hospital == null) return;
+            var stations = await _hospitalService.GetStationsByHospitalIdAsync(hospital.HospitalId);
+            foreach (var station in stations)
+                SelectedHospitalStations.Add(station);
         }
         [RelayCommand]
         public async Task GetHospitalsByNameAsync()
@@ -646,7 +651,7 @@ namespace SNRMS.ViewModels
                 TotalInstructors = await App.Database.Instructors.Where(i => i.User != null && i.User.IsActive == true).CountAsync();
                 TotalGroups      = await App.Database.Groups.CountAsync(g => !g.IsArchived);
                 TotalHospitals   = await App.Database.Hospitals.CountAsync();
-                TotalStations    = await App.Database.Stations.CountAsync();
+                TotalStations    = await App.Database.Stations.CountAsync(s => !s.IsArchived);
                 TotalRotations   = await App.Database.RotationAssignments.CountAsync(r => !r.IsArchived);
                 ActiveRotations  = await App.Database.RotationAssignments
                     .CountAsync(r => !r.IsArchived && r.StartDate <= today && r.EndDate >= today);
@@ -670,7 +675,9 @@ namespace SNRMS.ViewModels
                 RotationsPerHospital.Clear();
                 foreach (var hosp in hospitals.OrderBy(h => h.HospitalName))
                 {
-                    var count = hosp.Stations.Sum(st => st.RotationAssignments.Count(r => !r.IsArchived));
+                    var count = hosp.Stations
+                        .Where(st => !st.IsArchived)
+                        .Sum(st => st.RotationAssignments.Count(r => !r.IsArchived)); 
                     RotationsPerHospital.Add(new AnalyticsBarItem($"{hosp.HospitalName} | {hosp.Address}", count));
                 }
 

@@ -51,16 +51,23 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return station;
         }
-
+            
+        public async Task<List<Station>> GetStationsByHospitalIdAsync(int hospitalId)
+        {
+            return await _dbContext.Stations
+               .Where(s => s.HospitalId == hospitalId && !s.IsArchived)
+               .AsNoTracking()
+               .ToListAsync();
+        }
         public async Task<Station?> RemoveStationAsync(int stationId)
         {
-            var station = await _dbContext.Stations.Include(s => s.RotationAssignments).FirstOrDefaultAsync(s => s.StationId == stationId);
+            var station = await _dbContext.Stations.Include(s => s.RotationAssignments) .FirstOrDefaultAsync(s => s.StationId == stationId);
             if (station == null)
                 throw new InvalidOperationException("Station not found.");
-            if (station.RotationAssignments.Any())
+            if (station.RotationAssignments.Any(ra => !ra.IsArchived))
                 throw new InvalidOperationException("Cannot remove station with assigned rotations.");
-         
-            _dbContext.Stations.Remove(station);
+
+            station.IsArchived = true;
             await _dbContext.SaveChangesAsync();
             return station;
         }
@@ -74,8 +81,9 @@ namespace SNRMS.Core.Services
             var hospital = await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).FirstOrDefaultAsync(h => h.HospitalId == hospitalId);
             if (hospital == null)
                 throw new InvalidOperationException("Hospital not found.");
-            return hospital.Stations.ToList();
+            return hospital.Stations.Where(s => !s.IsArchived).ToList();
         }
+
         public async Task<Hospital?> DeleteHospitalAsync(int hospitalId)
         {
             var hospital = await _dbContext.Hospitals.Include(h => h.Stations).ThenInclude(h => h.RotationAssignments).FirstOrDefaultAsync(h => h.HospitalId == hospitalId);

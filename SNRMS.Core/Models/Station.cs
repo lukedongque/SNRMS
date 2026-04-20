@@ -10,6 +10,8 @@ namespace SNRMS.Core.Models
         public string StationName { get; set; } = string.Empty;
         public int Capacity { get; set; }
 
+        public bool IsArchived { get; set; } = false;
+
         public int HospitalId { get; set; }
         public Hospital Hospital { get; set; } = null!;
         public ICollection<RotationAssignment> RotationAssignments { get; set; } = new List<RotationAssignment>();
