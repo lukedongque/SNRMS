@@ -14,11 +14,13 @@ namespace SNRMS.ViewModels
     {
         private readonly RotationService _rotationService;
         private readonly StudentService _studentService;
+        private readonly AttendanceService _attendanceService;
 
         public StudentDashboardViewModel()
         {
             _rotationService = new RotationService(App.Database);
             _studentService = new StudentService(App.Database);
+            _attendanceService = new AttendanceService(App.Database);
         }
 
         //STUDENT -----------------------------------------------------------------------
@@ -32,6 +34,16 @@ namespace SNRMS.ViewModels
         public partial string StudentSectionName { get; set; } = string.Empty;
         [ObservableProperty]
         public partial int StudentYearLevel { get; set; }
+        [ObservableProperty]
+        public partial bool AlreadyMarkedAttendance { get; set; }
+
+        [ObservableProperty]
+        public partial string AttendanceStatusMessage { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial bool AlreadyClockedOut { get; set; }
+
+        [ObservableProperty]
+        public partial string ClockOutStatusMessage { get; set; } = string.Empty;
 
         // ROTATION ASSIGNMENT ----------------------------------------------------------
         [ObservableProperty]
@@ -142,6 +154,24 @@ namespace SNRMS.ViewModels
                             .OrderBy(r => r.StartDate)
                             .ToList());
                     HasSchedule = ScheduleAssignments.Count > 0;
+
+                    if (CurrentRotation != null)
+                    {
+                        AlreadyMarkedAttendance = await _attendanceService.HasAttendanceTodayAsync(
+                            SessionManager.CurrentUser!.StudentId!.Value,
+                            CurrentRotation.RotationAssignmentId);
+                        AlreadyClockedOut = await _attendanceService.HasClockedOutTodayAsync(
+                            SessionManager.CurrentUser!.StudentId!.Value,
+                            CurrentRotation.RotationAssignmentId);
+
+                        if (AlreadyMarkedAttendance)
+                            AttendanceStatusMessage = "Attendance already marked for today.";
+                        if (AlreadyClockedOut)
+                            ClockOutStatusMessage = "Already clocked out for today.";
+
+                        if (AlreadyMarkedAttendance)
+                            AttendanceStatusMessage = "Attendance already marked for today.";
+                    }
                 }
                 catch
                 {
@@ -164,6 +194,44 @@ namespace SNRMS.ViewModels
         public void Logout()
         {
             SessionManager.Logout();
+        }
+
+        [RelayCommand]
+        public async Task MarkAttendanceAsync()
+        {
+            if (CurrentRotation == null) return;
+
+            var studentId = SessionManager.CurrentUser!.StudentId!.Value;
+
+            try
+            {
+                var record = await _attendanceService.MarkAttendanceAsync(studentId, CurrentRotation.RotationAssignmentId);
+                AlreadyMarkedAttendance = true;
+                AttendanceStatusMessage = $"Attendance marked at {record!.TimeIn:hh:mm tt}";
+            }
+            catch (InvalidOperationException ex)
+            {
+                AttendanceStatusMessage = ex.Message;
+            }
+        }
+
+        [RelayCommand]
+        public async Task ClockOutAsync()
+        {
+            if (CurrentRotation == null) return;
+
+            var studentId = SessionManager.CurrentUser!.StudentId!.Value;
+
+            try
+            {
+                var record = await _attendanceService.ClockOutAsync(studentId, CurrentRotation.RotationAssignmentId);
+                AlreadyClockedOut = true;
+                ClockOutStatusMessage = $"Clocked out at {record!.TimeOut:hh:mm tt}";
+            }
+            catch (InvalidOperationException ex)
+            {
+                ClockOutStatusMessage = ex.Message;
+            }
         }
     }
 }

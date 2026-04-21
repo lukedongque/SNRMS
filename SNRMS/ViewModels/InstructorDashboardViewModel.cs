@@ -17,6 +17,7 @@ namespace SNRMS.ViewModels
         private readonly GroupService _groupService;
         private readonly SectionService _sectionService;
         private readonly HospitalService _hospitalService;
+        private readonly AttendanceService _attendanceService;
 
         public InstructorDashboardViewModel()
         {
@@ -25,6 +26,7 @@ namespace SNRMS.ViewModels
             _groupService = new GroupService(App.Database);
             _sectionService = new SectionService(App.Database);
             _hospitalService = new HospitalService(App.Database);
+            _attendanceService = new AttendanceService(App.Database);
         }
 
         //GROUPS ---------------------
@@ -100,6 +102,14 @@ namespace SNRMS.ViewModels
         public partial ObservableCollection<Station> Stations { get; set; } = new ObservableCollection<Station>();
 
         public List<string> DaySlotsList { get; } = new List<string> { "Mon-Tue", "Wed-Thu", "Fri-Sat" };
+
+        // ATTENDANCE ---------------------
+        [ObservableProperty]
+        public partial ObservableCollection<AttendanceRecord> AttendanceRecords { get; set; } = new();
+        [ObservableProperty]
+        public partial RotationAssignment? AttendanceFilterRotation { get; set; }
+        [ObservableProperty]
+        public partial DateTimeOffset AttendanceFilterDate { get; set; } = DateTimeOffset.Now;
 
         //OTHERS ---------------------
         [ObservableProperty]
@@ -664,6 +674,37 @@ namespace SNRMS.ViewModels
                 foreach (var member in Students.Where(s => s.GroupId == value.GroupId))
                     GroupMembers.Add(member);
             }
+        }
+
+        [RelayCommand]
+        public async Task LoadAttendanceAsync()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                List<AttendanceRecord> records;
+                if (AttendanceFilterRotation != null)
+                {
+                    records = await _attendanceService.GetAttendanceByRotationAsync(AttendanceFilterRotation.RotationAssignmentId);
+                }
+                else
+                {
+                    var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                    var section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                    records = await _attendanceService.GetAttendanceBySectionAndDateAsync(
+                        section.SectionId,
+                        DateOnly.FromDateTime(AttendanceFilterDate.Date));
+                }
+                AttendanceRecords.Clear();
+                foreach (var record in records)
+                    AttendanceRecords.Add(record);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error loading attendance: {ex.Message}";
+            }
+            finally { IsLoading = false; }
         }
     }
 }

@@ -24,6 +24,7 @@ namespace SNRMS.View
             GroupsPanel.Visibility = Visibility.Collapsed;
             StudentsPanel.Visibility = Visibility.Collapsed;
             RotationsPanel.Visibility = Visibility.Collapsed;
+            AttendancePanel.Visibility = Visibility.Collapsed;
 
             var tag = (args.SelectedItem as NavigationViewItem)?.Tag?.ToString();
             switch (tag)
@@ -36,6 +37,9 @@ namespace SNRMS.View
                     break;
                 case "Rotations":
                     RotationsPanel.Visibility = Visibility.Visible;
+                    break;
+                case "Attendance":
+                    AttendancePanel.Visibility = Visibility.Visible;
                     break;
             }
         }

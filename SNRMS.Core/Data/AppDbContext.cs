@@ -21,6 +21,7 @@ namespace SNRMS.Core.Data
         public DbSet<RotationAssignment> RotationAssignments { get; set; }
         public DbSet<Station> Stations { get; set; }
         public DbSet<Hospital> Hospitals { get; set; }
+        public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
 
         public DbSet<StudentRotationHistory> StudentRotationHistories { get; set; }
 

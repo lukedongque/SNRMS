@@ -59,6 +59,7 @@
                 <NavigationViewItem Content="Groups" Tag="Groups" Icon="People"/>
                 <NavigationViewItem Content="Students" Tag="Students" Icon="Contact"/>
                 <NavigationViewItem Content="Rotations" Tag="Rotations" Icon="Calendar"/>
+                <NavigationViewItem Content="Attendance" Tag="Attendance" Icon="Clock"/>
             </NavigationView.MenuItems>
 
             <Grid Padding="32">
@@ -638,6 +639,170 @@
                 </StackPanel>
                 
                 
+
+                <!-- ATTENDANCE PANEL -->
+                <ScrollViewer x:Name="AttendancePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="20">
+                        <StackPanel>
+                            <TextBlock Text="Attendance" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+                            <TextBlock Text="View and filter student clock-in and clock-out records"
+                                       FontSize="14" Foreground="#909191"/>
+                        </StackPanel>
+
+                        <!-- Filter Card -->
+                        <Border Background="White" CornerRadius="12" Padding="20"
+                                BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Filter Records" FontWeight="SemiBold"
+                                           Foreground="#2D3748" FontSize="16"/>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+
+                                    <!-- Filter by Rotation -->
+                                    <ComboBox Header="Filter by Rotation"
+                                              ItemsSource="{Binding RotationAssignments}"
+                                              SelectedItem="{Binding AttendanceFilterRotation, Mode=TwoWay}"
+                                              PlaceholderText="All Rotations"
+                                              Width="220">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel>
+                                                    <TextBlock>
+                                                        <Run Text="{Binding Group.GroupName}"/>
+                                                        <Run Text=" · "/>
+                                                        <Run Text="{Binding Station.StationName}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <!-- Filter by Date -->
+                                    <DatePicker Header="Filter by Date"
+                                                Date="{Binding AttendanceFilterDate, Mode=TwoWay}"/>
+
+                                    <!-- Load Button -->
+                                    <Button Content="Load Attendance"
+                                            Command="{Binding LoadAttendanceCommand}"
+                                            VerticalAlignment="Bottom"
+                                            Background="#1B3A6B" Foreground="White" CornerRadius="8"
+                                            Padding="16,8"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Records Card -->
+                        <Border Background="White" CornerRadius="12" Padding="20"
+                                BorderBrush="#E2E8F0" BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Attendance Records" FontWeight="SemiBold"
+                                           Foreground="#2D3748" FontSize="16"/>
+
+                                <!-- Column Headers -->
+                                <Grid Padding="8,4" Background="#F7FAFC">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Student" FontWeight="SemiBold"
+                                               Foreground="#718096" FontSize="12"/>
+                                    <TextBlock Grid.Column="1" Text="Student No." FontWeight="SemiBold"
+                                               Foreground="#718096" FontSize="12"/>
+                                    <TextBlock Grid.Column="2" Text="Station" FontWeight="SemiBold"
+                                               Foreground="#718096" FontSize="12"/>
+                                    <TextBlock Grid.Column="3" Text="Date" FontWeight="SemiBold"
+                                               Foreground="#718096" FontSize="12"/>
+                                    <TextBlock Grid.Column="4" Text="Time In" FontWeight="SemiBold"
+                                               Foreground="#718096" FontSize="12"/>
+                                    <TextBlock Grid.Column="5" Text="Time Out" FontWeight="SemiBold"
+                                               Foreground="#718096" FontSize="12"/>
+                                </Grid>
+
+                                <Border Height="1" Background="#E2E8F0"/>
+
+                                <ListView ItemsSource="{Binding AttendanceRecords}"
+                                          SelectionMode="None"
+                                          Height="350">
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="ListViewItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,2" CornerRadius="6" Padding="8,10"
+                                                    Background="#F7FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="140"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Student Name -->
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Student.FirstName}"
+                                                                   FontWeight="SemiBold" Foreground="#2D3748" FontSize="13"/>
+                                                        <TextBlock Text="{Binding Student.LastName}"
+                                                                   FontWeight="SemiBold" Foreground="#2D3748" FontSize="13"/>
+                                                    </StackPanel>
+
+                                                    <!-- Student Number -->
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Student.StudentNumber}"
+                                                               Foreground="#718096" FontSize="12"
+                                                               VerticalAlignment="Center"/>
+
+                                                    <!-- Station -->
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding RotationAssignment.Station.StationName, FallbackValue='—'}"
+                                                               Foreground="#4A5568" FontSize="12"
+                                                               VerticalAlignment="Center"/>
+
+                                                    <!-- Date -->
+                                                    <TextBlock Grid.Column="3"
+                                                               Text="{Binding DateToday}"
+                                                               Foreground="#4A5568" FontSize="12"
+                                                               VerticalAlignment="Center"/>
+
+                                                    <!-- Time In -->
+                                                    <Border Grid.Column="4" Background="#F0FFF4"
+                                                            CornerRadius="6" Padding="8,4"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding TimeIn, Converter={StaticResource TimeFormatter}}"
+                                                                   Foreground="#38A169" FontSize="12" FontWeight="SemiBold"/>
+                                                    </Border>
+
+                                                    <!-- Time Out -->
+                                                    <Border Grid.Column="5" Background="#FFF5F5"
+                                                            CornerRadius="6" Padding="8,4"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding TimeOut, Converter={StaticResource TimeFormatter}, FallbackValue='—'}"
+                                                                   Foreground="#E53E3E" FontSize="12" FontWeight="SemiBold"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+
+                                <!-- Empty state -->
+                                <TextBlock Text="No attendance records found. Use the filters above and click Load Attendance."
+                                           Foreground="#A0AEC0" FontSize="13" FontStyle="Italic"
+                                           Visibility="{Binding HasNoAttendanceRecords, Mode=OneWay,
+                                                        Converter={StaticResource BoolToVisible}}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
 
                 <!-- Messages -->
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="#E53E3E" 
