@@ -165,12 +165,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="Group Members" FontWeight="SemiBold" 
                                                 Foreground="#2D3748" FontSize="16"/>
-                                    <TextBlock Text="Sort by:" VerticalAlignment="Center" 
-                                                Foreground="#718096" FontSize="12" Margin="16,0,0,0"/>
-                                    <Button Content="Group Name" 
-                                            Command="{Binding SortGroupsByNameCommand}"
-                                            Background="#E2E8F0" Foreground="#2D3748"
-                                            CornerRadius="6" Padding="8,4"/>
+                                    
                                 </StackPanel>
                                 <Grid Padding="20,4" Margin="0,16,0,0" Background="#F7FAFC">
                                     <Grid.ColumnDefinitions>

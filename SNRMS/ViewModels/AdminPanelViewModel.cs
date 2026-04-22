@@ -23,12 +23,15 @@ namespace SNRMS.ViewModels
         private readonly InstructorService _instructorService;
         private readonly HospitalService _hospitalService;
         private readonly UserService _userService;
+        private readonly AttendanceService _attendanceService;
+
         public AdminPanelViewModel()
         {
             _sectionService = new SectionService(App.Database);
             _instructorService = new InstructorService(App.Database);
             _hospitalService = new HospitalService(App.Database);
             _userService = new UserService(App.Database);
+            _attendanceService = new AttendanceService(App.Database);
         }
 
         //SECTION ------------------
@@ -126,6 +129,18 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial int SlotMonTue { get; set; }
         [ObservableProperty] public partial int SlotWedThu { get; set; }
         [ObservableProperty] public partial int SlotFriSat { get; set; }
+
+        // Instructor Analytics
+        [ObservableProperty]
+        public partial Instructor? SelectedAnalyticsInstructor { get; set; }
+        [ObservableProperty]
+        public partial ObservableCollection<AnalyticsBarItem> InstructorRotationsPerStation { get; set; } = new();
+        [ObservableProperty]
+        public partial ObservableCollection<AnalyticsBarItem> InstructorStudentsPerGroup { get; set; } = new();
+        [ObservableProperty]
+        public partial ObservableCollection<AnalyticsBarItem> InstructorAttendanceRatePerGroup { get; set; } = new();
+        [ObservableProperty]
+        public partial bool HasInstructorAnalytics { get; set; }
 
 
 
@@ -668,17 +683,40 @@ namespace SNRMS.ViewModels
                     StudentsPerSection.Add(new AnalyticsBarItem($"{sec.SectionName} | Year: {sec.YearLevel}", count));
                 }
 
-                // Rotations per hospital
-                var hospitals = await App.Database.Hospitals
-                    .Include(h => h.Stations).ThenInclude(st => st.RotationAssignments)
+                // Rotations per hospital — detailed by section & group
+                var detailedRotations = await App.Database.RotationAssignments
+                    .Where(r => !r.IsArchived)
+                    .Include(r => r.Station).ThenInclude(s => s.Hospital)
+                    .Include(r => r.Group).ThenInclude(g => g.Section)
                     .ToListAsync();
+
                 RotationsPerHospital.Clear();
-                foreach (var hosp in hospitals.OrderBy(h => h.HospitalName))
+                var byHospital = detailedRotations
+                    .GroupBy(r => r.Station.Hospital.HospitalName)
+                    .OrderBy(h => h.Key);
+
+                foreach (var hospitalGroup in byHospital)
                 {
-                    var count = hosp.Stations
-                        .Where(st => !st.IsArchived)
-                        .Sum(st => st.RotationAssignments.Count(r => !r.IsArchived)); 
-                    RotationsPerHospital.Add(new AnalyticsBarItem($"{hosp.HospitalName} | {hosp.Address}", count));
+                    // Hospital header row
+                    RotationsPerHospital.Add(new AnalyticsBarItem(
+                        hospitalGroup.Key, hospitalGroup.Count(), isHeader: true, maxValue: detailedRotations.Count));
+
+                    // Sub-rows: Section → Group
+                    var bySection = hospitalGroup
+                        .GroupBy(r => r.Group?.Section?.SectionName ?? "No Section")
+                        .OrderBy(s => s.Key);
+                    foreach (var sectionGroup in bySection)
+                    {
+                        var byGroup = sectionGroup
+                            .GroupBy(r => r.Group?.GroupName ?? "No Group")
+                            .OrderBy(g => g.Key);
+                        foreach (var groupItem in byGroup)
+                        {
+                            RotationsPerHospital.Add(new AnalyticsBarItem(
+                                $"  {sectionGroup.Key}  ›  {groupItem.Key}",
+                                groupItem.Count(), isHeader: false, maxValue: hospitalGroup.Count()));
+                        }
+                    }
                 }
 
                 // Rotations by day slot
@@ -705,6 +743,73 @@ namespace SNRMS.ViewModels
         }
 
         //SESSION MANAGEMENT COMMANDS ----------------------------------------------------------------------
+        [RelayCommand]
+        public async Task LoadInstructorAnalyticsAsync()
+        {
+            if (SelectedAnalyticsInstructor == null) return;
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var instructorId = SelectedAnalyticsInstructor.InstructorId;
+
+                // Get the instructor's section
+                var section = await App.Database.Sections
+                    .Include(s => s.Groups).ThenInclude(g => g.Students.Where(st => !st.IsArchived))
+                    .Include(s => s.Groups).ThenInclude(g => g.RotationAssignments.Where(r => !r.IsArchived))
+                        .ThenInclude(ra => ra.Station).ThenInclude(s => s.Hospital)
+                    .FirstOrDefaultAsync(s => s.InstructorId == instructorId);
+
+                if (section == null)
+                {
+                    ErrorMessage = "This instructor has no assigned section.";
+                    HasInstructorAnalytics = false;
+                    return;
+                }
+
+                var activeGroups = section.Groups.Where(g => !g.IsArchived).ToList();
+
+                // Graph 1 — Rotations per Station
+                InstructorRotationsPerStation.Clear();
+                var rotationsByStation = activeGroups
+                    .SelectMany(g => g.RotationAssignments)
+                    .GroupBy(r => r.Station?.StationName ?? "Unknown")
+                    .OrderByDescending(g => g.Count());
+                int maxStation = rotationsByStation.Any() ? rotationsByStation.Max(g => g.Count()) : 1;
+                foreach (var stationGroup in rotationsByStation)
+                    InstructorRotationsPerStation.Add(new AnalyticsBarItem(
+                        stationGroup.Key, stationGroup.Count(), maxValue: Math.Max(maxStation, 1)));
+
+                // Graph 2 — Students per Group
+                InstructorStudentsPerGroup.Clear();
+                int maxStudents = activeGroups.Any() ? activeGroups.Max(g => g.Students.Count) : 1;
+                foreach (var group in activeGroups.OrderBy(g => g.GroupName))
+                    InstructorStudentsPerGroup.Add(new AnalyticsBarItem(
+                        group.GroupName, group.Students.Count, maxValue: Math.Max(maxStudents, 1)));
+
+                // Graph 3 — Attendance Rate per Group
+                InstructorAttendanceRatePerGroup.Clear();
+                foreach (var group in activeGroups.OrderBy(g => g.GroupName))
+                {
+                    var studentIds = group.Students.Select(s => s.StudentId).ToList();
+                    var totalExpected = group.RotationAssignments.Count * group.Students.Count;
+                    var totalAttended = await App.Database.AttendanceRecords
+                        .CountAsync(a => studentIds.Contains(a.StudentId));
+                    int rate = totalExpected > 0 ? (int)((totalAttended / (double)totalExpected) * 100) : 0;
+                    InstructorAttendanceRatePerGroup.Add(new AnalyticsBarItem(
+                        group.GroupName, rate, maxValue: 100));
+                }
+
+                HasInstructorAnalytics = true;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load instructor analytics: {ex.Message}";
+                HasInstructorAnalytics = false;
+            }
+            finally { IsLoading = false; }
+        }
+
         [RelayCommand]
         public void Logout()
         {

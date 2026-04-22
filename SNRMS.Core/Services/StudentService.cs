@@ -133,14 +133,14 @@ namespace SNRMS.Core.Services
             return await _dbContext.Students.AsNoTracking().Include(s => s.Group).Where(s => !s.IsArchived).ToListAsync();
         }
 
-        public async Task<List<Student>> SearchStudentsAsync(string searchTerm) //search student by name or student number
+        public async Task<List<Student>> SearchStudentsAsync(string searchTerm) 
         {
             if (string.IsNullOrEmpty(searchTerm))
                 throw new ArgumentException("Search term is required.");
             return await _dbContext.Students.AsNoTracking()
-                .Where(s => s.FirstName.Contains(searchTerm) ||
+                .Where(s => !s.IsArchived && (s.FirstName.Contains(searchTerm) ||
                             s.LastName.Contains(searchTerm) ||
-                            s.StudentNumber.Contains(searchTerm))
+                            s.StudentNumber.Contains(searchTerm)))
                 .Include(s => s.Group)
                 .ToListAsync();
         }

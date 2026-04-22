@@ -162,7 +162,7 @@ namespace SNRMS.Core.Services
 
         public async Task<List<RotationAssignment>> GetAssignmentByGroupAsync(int groupId)
         {
-            var rotationassignments = await _dbContext.RotationAssignments.AsNoTracking().Where(ra => ra.GroupId == groupId)
+            var rotationassignments = await _dbContext.RotationAssignments.AsNoTracking().Where(ra => ra.GroupId == groupId && !ra.IsArchived)
                 .Include(ra => ra.Group)
                 .Include(ra => ra.Station)
                     .ThenInclude(s => s.Hospital)

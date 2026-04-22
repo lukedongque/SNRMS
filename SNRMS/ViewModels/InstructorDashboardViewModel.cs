@@ -27,6 +27,7 @@ namespace SNRMS.ViewModels
             _sectionService = new SectionService(App.Database);
             _hospitalService = new HospitalService(App.Database);
             _attendanceService = new AttendanceService(App.Database);
+            HasNoAttendanceRecords = true;
         }
 
         //GROUPS ---------------------
@@ -110,6 +111,8 @@ namespace SNRMS.ViewModels
         public partial RotationAssignment? AttendanceFilterRotation { get; set; }
         [ObservableProperty]
         public partial DateTimeOffset AttendanceFilterDate { get; set; } = DateTimeOffset.Now;
+        [ObservableProperty]
+        public partial bool HasNoAttendanceRecords { get; set; }
 
         //OTHERS ---------------------
         [ObservableProperty]
@@ -650,7 +653,7 @@ namespace SNRMS.ViewModels
             IsLoading = true;
             try
             {
-                var students = await _studentService.GetStudentsByGroupAsync(SelectedGroup.GroupId);
+                var students = await _studentService.GetStudentsByGroupAsync(StudentGroupFilter.GroupId);
                 Students.Clear();
                 foreach (var student in students)
                 {
@@ -664,7 +667,6 @@ namespace SNRMS.ViewModels
             finally { IsLoading = false; }
         }
 
-        [RelayCommand]
 
         partial void OnSelectedGroupChanged(Group? value)
         {
@@ -686,7 +688,7 @@ namespace SNRMS.ViewModels
                 List<AttendanceRecord> records;
                 if (AttendanceFilterRotation != null)
                 {
-                    records = await _attendanceService.GetAttendanceByRotationAsync(AttendanceFilterRotation.RotationAssignmentId);
+                    records = await _attendanceService.GetAttendanceByRotationAsync(AttendanceFilterRotation.RotationAssignmentId, DateOnly.FromDateTime(AttendanceFilterDate.Date));
                 }
                 else
                 {
@@ -699,6 +701,11 @@ namespace SNRMS.ViewModels
                 AttendanceRecords.Clear();
                 foreach (var record in records)
                     AttendanceRecords.Add(record);
+                if (AttendanceRecords.Count == 0)
+                {
+                    HasNoAttendanceRecords = true;
+                }
+                else HasNoAttendanceRecords = false;
             }
             catch (Exception ex)
             {

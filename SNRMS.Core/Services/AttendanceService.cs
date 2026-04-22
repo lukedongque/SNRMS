@@ -89,11 +89,11 @@ namespace SNRMS.Core.Services
                 .ToListAsync();
         }
 
-        public async Task<List<AttendanceRecord>> GetAttendanceByRotationAsync(int rotationAssignmentId)
+        public async Task<List<AttendanceRecord>> GetAttendanceByRotationAsync(int rotationAssignmentId, DateOnly date)
         {
             return await _dbContext.AttendanceRecords
                 .AsNoTracking()
-                .Where(ar => ar.RotationAssignmentId == rotationAssignmentId)
+                .Where(ar => ar.RotationAssignmentId == rotationAssignmentId && ar.DateToday == date)
                 .Include(ar => ar.Student)
                 .OrderBy(ar => ar.DateToday)
                     .ThenBy(ar => ar.Student.LastName)
