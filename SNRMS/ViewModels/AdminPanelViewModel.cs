@@ -119,7 +119,11 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial ObservableCollection<AnalyticsBarItem> StudentsPerSection { get; set; } = new();
 
-        // Bar chart: rotations per hospital
+        // Hospital breakdown — nested dropdown model
+        [ObservableProperty]
+        public partial ObservableCollection<HospitalBreakdownVm> HospitalBreakdown { get; set; } = new();
+
+        // Bar chart: rotations per hospital (flat — kept for backward compat)
         [ObservableProperty]
         public partial ObservableCollection<AnalyticsBarItem> RotationsPerHospital { get; set; } = new();
 
@@ -683,40 +687,68 @@ namespace SNRMS.ViewModels
                     StudentsPerSection.Add(new AnalyticsBarItem($"{sec.SectionName} | Year: {sec.YearLevel}", count));
                 }
 
-                // Rotations per hospital — detailed by section & group
+                // Rotations per hospital — nested breakdown by Year Level, Section, Group
                 var detailedRotations = await App.Database.RotationAssignments
                     .Where(r => !r.IsArchived)
                     .Include(r => r.Station).ThenInclude(s => s.Hospital)
                     .Include(r => r.Group).ThenInclude(g => g.Section)
                     .ToListAsync();
 
+                HospitalBreakdown.Clear();
                 RotationsPerHospital.Clear();
-                var byHospital = detailedRotations
-                    .GroupBy(r => r.Station.Hospital.HospitalName)
-                    .OrderBy(h => h.Key);
 
-                foreach (var hospitalGroup in byHospital)
+                // Load ALL hospitals — not just those with rotations
+                var allHospitals = await App.Database.Hospitals
+                    .OrderBy(h => h.HospitalName)
+                    .ToListAsync();
+
+                int globalMax = Math.Max(detailedRotations.Count, 1);
+
+                foreach (var hospital in allHospitals)
                 {
-                    // Hospital header row
-                    RotationsPerHospital.Add(new AnalyticsBarItem(
-                        hospitalGroup.Key, hospitalGroup.Count(), isHeader: true, maxValue: detailedRotations.Count));
+                    // Get rotations for this hospital (could be empty)
+                    var hospitalRotations = detailedRotations
+                        .Where(r => r.Station?.Hospital?.HospitalId == hospital.HospitalId)
+                        .ToList();
 
-                    // Sub-rows: Section → Group
-                    var bySection = hospitalGroup
-                        .GroupBy(r => r.Group?.Section?.SectionName ?? "No Section")
-                        .OrderBy(s => s.Key);
-                    foreach (var sectionGroup in bySection)
+                    int totalForHospital = hospitalRotations.Count;
+
+                    var vm = new HospitalBreakdownVm(
+                        hospital.HospitalName,
+                        hospital.Address,
+                        totalForHospital);
+
+                    // Only build group breakdown if there are rotations
+                    if (totalForHospital > 0)
                     {
-                        var byGroup = sectionGroup
-                            .GroupBy(r => r.Group?.GroupName ?? "No Group")
-                            .OrderBy(g => g.Key);
-                        foreach (var groupItem in byGroup)
+                        var byGroup = hospitalRotations
+                            .GroupBy(r => new
+                            {
+                                GroupName   = r.Group?.GroupName ?? "No Group",
+                                SectionName = r.Group?.Section?.SectionName ?? "No Section",
+                                YearLevel   = r.Group?.Section?.YearLevel ?? 0
+                            })
+                            .OrderBy(g => g.Key.YearLevel)
+                            .ThenBy(g => g.Key.SectionName)
+                            .ThenBy(g => g.Key.GroupName);
+
+                        foreach (var g in byGroup)
                         {
-                            RotationsPerHospital.Add(new AnalyticsBarItem(
-                                $"  {sectionGroup.Key}  ›  {groupItem.Key}",
-                                groupItem.Count(), isHeader: false, maxValue: hospitalGroup.Count()));
+                            vm.Groups.Add(new GroupBreakdownVm(
+                                g.Key.GroupName,
+                                g.Key.SectionName,
+                                g.Key.YearLevel,
+                                g.Count(),
+                                Math.Max(totalForHospital, 1)));
                         }
                     }
+
+                    HospitalBreakdown.Add(vm);
+
+                    // Keep flat list in sync
+                    RotationsPerHospital.Add(new AnalyticsBarItem(
+                        hospital.HospitalName, totalForHospital,
+                        isHeader: true, maxValue: globalMax));
                 }
 
                 // Rotations by day slot
