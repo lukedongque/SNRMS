@@ -24,17 +24,19 @@ namespace SNRMS.Core.Services
             if (station == null)
                 throw new InvalidOperationException("Station not found.");
             var currentAssignments = await _dbContext.RotationAssignments
-                .CountAsync(ca => ca.StationId == stationId && ca.DaySlot == dayslot &&
-                    ((startDate >= ca.StartDate && startDate <= ca.EndDate) ||
-                     (endDate >= ca.StartDate && endDate <= ca.EndDate) ||
-                     (startDate <= ca.StartDate && endDate >= ca.EndDate)));
+                .CountAsync(ca => !ca.IsArchived && 
+                            ca.StationId == stationId &&
+                            ca.DaySlot == dayslot &&
+                            startDate <= ca.EndDate && endDate >= ca.StartDate &&
+                            startTime < ca.EndTime && endTime > ca.StartTime);
             if (currentAssignments >= station.Capacity)
-                throw new InvalidOperationException("Station capacity is full for the given time slot.");
+                throw new InvalidOperationException($"Station capacity is full for the given time slot. Number of assignment on the time slot chosen: {currentAssignments}");
             var groupConflict = await _dbContext.RotationAssignments
                     .AnyAsync(ra => ra.GroupId == groupId &&
                     ra.DaySlot == dayslot &&
                     startDate <= ra.EndDate &&
-                    endDate >= ra.StartDate);
+                    endDate >= ra.StartDate &&
+                    startTime < ra.EndTime && endTime > ra.StartTime);
             if (groupConflict)
                 throw new InvalidOperationException("Group has another assignment during the same time slot.");
 
@@ -67,6 +69,9 @@ namespace SNRMS.Core.Services
         public async Task<RotationAssignment?> GetNextRotationAssignment(int studentId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
+            var student = await _dbContext.Students.FindAsync(studentId);
+            if (student?.GroupId == null) return null;
+
             return await _dbContext.StudentRotationHistories
                 .Where(h => h.StudentId == studentId)
                 .Include(h => h.RotationAssignment)
@@ -74,13 +79,16 @@ namespace SNRMS.Core.Services
                 .Include(h => h.RotationAssignment)
                     .ThenInclude(r => r.Group)
                 .Select(h => h.RotationAssignment)
-                .Where(r => !r.IsArchived && r.StartDate > today)
+                .Where(r => !r.IsArchived && r.StartDate > today && r.GroupId == student.GroupId)
                 .OrderBy(r => r.StartDate)
                 .FirstOrDefaultAsync();
         }
         public async Task<RotationAssignment?> GetCurrentRotationAssignmentAsync(int studentId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
+            var student = await _dbContext.Students.FindAsync(studentId);
+            if (student?.GroupId == null) return null;
+
             return await _dbContext.StudentRotationHistories
                 .Where(h => h.StudentId == studentId)
                 .Include(h => h.RotationAssignment)
@@ -88,7 +96,7 @@ namespace SNRMS.Core.Services
                 .Include(h => h.RotationAssignment)
                     .ThenInclude(r => r.Group)
                 .Select(h => h.RotationAssignment)
-                .Where(r => !r.IsArchived && r.StartDate <= today && r.EndDate >= today)
+                .Where(r => !r.IsArchived && r.StartDate <= today && r.EndDate >= today && r.GroupId == student.GroupId)
                 .FirstOrDefaultAsync();
         }
         public async Task<List<RotationAssignment>> GetAssignmentBySection(int sectionId)
@@ -109,6 +117,9 @@ namespace SNRMS.Core.Services
         }
         public async Task<List<RotationAssignment>> GetStudentAllAssignmentsAsync(int studentId)
         {
+            var student = await _dbContext.Students.FindAsync(studentId);
+            if (student?.GroupId == null) return new List<RotationAssignment>();
+
             return await _dbContext.StudentRotationHistories
                 .Where(h => h.StudentId == studentId)
                 .Include(h => h.RotationAssignment)
@@ -116,7 +127,7 @@ namespace SNRMS.Core.Services
                 .Include(h => h.RotationAssignment)
                     .ThenInclude(r => r.Group)
                 .Select(h => h.RotationAssignment)
-                .Where(r => !r.IsArchived)
+                .Where(r => !r.IsArchived && r.GroupId == student.GroupId)
                 .OrderBy(r => r.StartDate)
                 .ToListAsync();
         }

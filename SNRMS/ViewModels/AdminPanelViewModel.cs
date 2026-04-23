@@ -1,5 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Windows.Storage.Pickers;
 using SNRMS.Core.Models;
@@ -54,7 +58,39 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial string InstructorEmail { get; set; } = string.Empty;
         [ObservableProperty]
-        public partial string InstructorEmployeeId { get; set; } = string.Empty;    
+        public partial string InstructorEmployeeId { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial bool ShowInactiveInstructors { get; set; }
+
+        //EDIT INSTRUCTOR ------------------
+        [ObservableProperty]
+        public partial string EditInstructorFirstName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string EditInstructorLastName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string EditInstructorEmail { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string EditInstructorEmployeeId { get; set; } = string.Empty;
+
+        public async Task SaveInstructorEditAsync()
+        {
+            if (SelectedInstructor == null) return;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                await _userService.UpdateInstructorAsync(
+                    SelectedInstructor.InstructorId,
+                    EditInstructorFirstName,
+                    EditInstructorLastName,
+                    EditInstructorEmail,
+                    EditInstructorEmployeeId);
+                await LoadDataAsync();
+                SuccessMessage = "Instructor information updated successfully.";
+            }
+            finally { IsLoading = false; }
+        }
 
         //HOSPITAL ------------------
         [ObservableProperty]
@@ -93,6 +129,8 @@ namespace SNRMS.ViewModels
         public partial ObservableCollection<Section> Sections { get; set; } = new ObservableCollection<Section>();
         [ObservableProperty]
         public partial ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
+        [ObservableProperty]
+        public partial ObservableCollection<Instructor> DisplayInstructors { get; set; } = new();
         [ObservableProperty]
         public partial ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
         [ObservableProperty]
@@ -138,13 +176,31 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial Instructor? SelectedAnalyticsInstructor { get; set; }
         [ObservableProperty]
-        public partial ObservableCollection<AnalyticsBarItem> InstructorRotationsPerStation { get; set; } = new();
-        [ObservableProperty]
-        public partial ObservableCollection<AnalyticsBarItem> InstructorStudentsPerGroup { get; set; } = new();
-        [ObservableProperty]
-        public partial ObservableCollection<AnalyticsBarItem> InstructorAttendanceRatePerGroup { get; set; } = new();
-        [ObservableProperty]
         public partial bool HasInstructorAnalytics { get; set; }
+
+        // LiveCharts2 — Graph 1: Rotations per Station
+        [ObservableProperty]
+        public partial ISeries[] RotationsPerStationSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty]
+        public partial Axis[] RotationsPerStationXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty]
+        public partial Axis[] RotationsPerStationYAxes { get; set; } = Array.Empty<Axis>();
+
+        // LiveCharts2 — Graph 2: Students per Group
+        [ObservableProperty]
+        public partial ISeries[] StudentsPerGroupSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty]
+        public partial Axis[] StudentsPerGroupXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty]
+        public partial Axis[] StudentsPerGroupYAxes { get; set; } = Array.Empty<Axis>();
+
+        // LiveCharts2 — Graph 3: Attendance Rate per Group
+        [ObservableProperty]
+        public partial ISeries[] AttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty]
+        public partial Axis[] AttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty]
+        public partial Axis[] AttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
 
 
 
@@ -172,6 +228,7 @@ namespace SNRMS.ViewModels
                     if (instructorUser != null && instructorUser.IsActive)
                         ActiveInstructors.Add(instructor);
                 }
+                ApplyInstructorFilter();
                 var hospitals = await _hospitalService.GetAllHospitalsAsync();
                 Hospitals.Clear();
                 foreach (var hospital in hospitals)
@@ -450,6 +507,7 @@ namespace SNRMS.ViewModels
             Instructors.Clear();
             foreach (var instructor in sorted)
                 Instructors.Add(instructor);
+            ApplyInstructorFilter();
         }
 
         [RelayCommand]
@@ -470,6 +528,7 @@ namespace SNRMS.ViewModels
                 Instructors.Clear();
                 foreach (var instructor in results)
                     Instructors.Add(instructor);
+                ApplyInstructorFilter();
             }
             catch (Exception ex)
             {
@@ -480,7 +539,25 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        private void ApplyInstructorFilter()
+        {
+            if (Instructors == null) return;
 
+            var filtered = Instructors.Where(i =>
+                (i.User?.IsActive == true && !ShowInactiveInstructors) ||
+                (i.User?.IsActive == false && ShowInactiveInstructors)
+            ).ToList();
+
+            DisplayInstructors.Clear();
+            foreach (var instructor in filtered)
+            {
+                DisplayInstructors.Add(instructor);
+            }
+        }
+        partial void OnShowInactiveInstructorsChanged(bool value)
+        {
+            ApplyInstructorFilter();
+        }
 
         //HOSPITAL COMMANDS ----------------------------------------------------------------------
         [RelayCommand]
@@ -785,7 +862,6 @@ namespace SNRMS.ViewModels
             {
                 var instructorId = SelectedAnalyticsInstructor.InstructorId;
 
-                // Get the instructor's section
                 var section = await App.Database.Sections
                     .Include(s => s.Groups).ThenInclude(g => g.Students.Where(st => !st.IsArchived))
                     .Include(s => s.Groups).ThenInclude(g => g.RotationAssignments.Where(r => !r.IsArchived))
@@ -801,36 +877,152 @@ namespace SNRMS.ViewModels
 
                 var activeGroups = section.Groups.Where(g => !g.IsArchived).ToList();
 
-                // Graph 1 — Rotations per Station
-                InstructorRotationsPerStation.Clear();
+                // ── GRAPH 1: Rotations per Station ────────────────────────────
                 var rotationsByStation = activeGroups
                     .SelectMany(g => g.RotationAssignments)
                     .GroupBy(r => r.Station?.StationName ?? "Unknown")
-                    .OrderByDescending(g => g.Count());
-                int maxStation = rotationsByStation.Any() ? rotationsByStation.Max(g => g.Count()) : 1;
-                foreach (var stationGroup in rotationsByStation)
-                    InstructorRotationsPerStation.Add(new AnalyticsBarItem(
-                        stationGroup.Key, stationGroup.Count(), maxValue: Math.Max(maxStation, 1)));
+                    .OrderByDescending(g => g.Count())
+                    .ToList();
 
-                // Graph 2 — Students per Group
-                InstructorStudentsPerGroup.Clear();
-                int maxStudents = activeGroups.Any() ? activeGroups.Max(g => g.Students.Count) : 1;
-                foreach (var group in activeGroups.OrderBy(g => g.GroupName))
-                    InstructorStudentsPerGroup.Add(new AnalyticsBarItem(
-                        group.GroupName, group.Students.Count, maxValue: Math.Max(maxStudents, 1)));
+                var stationLabels = rotationsByStation.Select(g => g.Key).ToArray();
+                var stationValues = rotationsByStation.Select(g => (double)g.Count()).ToArray();
 
-                // Graph 3 — Attendance Rate per Group
-                InstructorAttendanceRatePerGroup.Clear();
+                RotationsPerStationSeries = new ISeries[]
+                {
+                    new ColumnSeries<double>
+                    {
+                        Name = "Rotations",
+                        Values = stationValues,
+                        Fill = new SolidColorPaint(new SKColor(27, 58, 107)),
+                        //CornerRadius = 4,
+                        MaxBarWidth = 40
+                    }
+                };
+                RotationsPerStationXAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        Labels = stationLabels,
+                        LabelsRotation = -15,
+                        TextSize = 11,
+                    }
+                };
+                RotationsPerStationYAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        Name = "Rotations",
+                        MinLimit = 0,
+                        TextSize = 11
+                    }
+                };
+
+                // ── GRAPH 2: Students per Group ───────────────────────────────
+                var groupLabels = activeGroups.OrderBy(g => g.GroupName)
+                    .Select(g => g.GroupName).ToArray();
+                var studentValues = activeGroups.OrderBy(g => g.GroupName)
+                    .Select(g => (double)g.Students.Count).ToArray();
+
+                StudentsPerGroupSeries = new ISeries[]
+                {
+                    new ColumnSeries<double>
+                    {
+                        Name = "Students",
+                        Values = studentValues,
+                        Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
+                        //CornerRadius = 4,
+                        MaxBarWidth = 40
+                    }
+                };
+                StudentsPerGroupXAxes = new Axis[]
+                {
+                    new Axis { Labels = groupLabels, TextSize = 11 }
+                };
+                StudentsPerGroupYAxes = new Axis[]
+                {
+                    new Axis { Name = "Students", MinLimit = 0, TextSize = 11 }
+                };
+
+                // ── GRAPH 3: Attendance Rate per Group ───────────────────────
+                int GetDayCount(string daySlot) => daySlot switch
+                {
+                    "Mon-Tue" => 2,
+                    "Wed-Thu" => 2,
+                    "Fri-Sat" => 2,
+                    _ => 1
+                };
+
+                var attendanceLabels = new List<string>();
+                var attendanceValues = new List<double>();
+
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
                 {
                     var studentIds = group.Students.Select(s => s.StudentId).ToList();
-                    var totalExpected = group.RotationAssignments.Count * group.Students.Count;
-                    var totalAttended = await App.Database.AttendanceRecords
-                        .CountAsync(a => studentIds.Contains(a.StudentId));
-                    int rate = totalExpected > 0 ? (int)((totalAttended / (double)totalExpected) * 100) : 0;
-                    InstructorAttendanceRatePerGroup.Add(new AnalyticsBarItem(
-                        group.GroupName, rate, maxValue: 100));
+                    int totalExpected = group.RotationAssignments
+                        .Sum(r => GetDayCount(r.DaySlot)) * group.Students.Count;
+
+                    int totalAttended = await App.Database.AttendanceRecords
+                        .Where(a => studentIds.Contains(a.StudentId))
+                        .Select(a => new { a.StudentId, a.DateToday })
+                        .Distinct()
+                        .CountAsync();
+
+                    double rate = totalExpected > 0
+                        ? Math.Round((totalAttended / (double)totalExpected) * 100, 1)
+                        : 0;
+
+                    attendanceLabels.Add(group.GroupName);
+                    attendanceValues.Add(rate);
                 }
+
+                // Color each bar: green if >= 80, red if below
+                var attendancePaints = attendanceValues
+                    .Select(v => v >= 80
+                        ? new SolidColorPaint(new SKColor(56, 161, 105))   // green
+                        : new SolidColorPaint(new SKColor(229, 62, 62)))    // red
+                    .ToArray();
+
+                // Build one ColumnSeries per group so each can have its own color
+                var attendanceSeries = attendanceLabels
+                    .Select((label, i) => (ISeries)new ColumnSeries<double>
+                    {
+                        Name = label,
+                        Values = new double[] { attendanceValues[i] },
+                        Fill = attendancePaints[i],
+                        //CornerRadius = 4,
+                        MaxBarWidth = 40
+                    })
+                    .ToArray();
+
+                // Add 80% threshold line
+                var thresholdSeries = attendanceSeries
+                    .Append(new LineSeries<double>
+                    {
+                        Name = "80% Threshold",
+                        Values = Enumerable.Repeat(80.0, attendanceLabels.Count).ToArray(),
+                        Stroke = new SolidColorPaint(new SKColor(27, 58, 107)) { StrokeThickness = 2 },
+                        Fill = null,
+                        GeometrySize = 0,
+                        LineSmoothness = 0
+                    })
+                    .ToArray();
+
+                AttendanceRateSeries = thresholdSeries;
+                AttendanceRateXAxes = new Axis[]
+                {
+                     new Axis { Labels = attendanceLabels.ToArray(), TextSize = 11 }
+                };
+                AttendanceRateYAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        Name = "Attendance %",
+                        MinLimit = 0,
+                        MaxLimit = 100,
+                        TextSize = 11
+                        
+                    }
+                };
 
                 HasInstructorAnalytics = true;
             }

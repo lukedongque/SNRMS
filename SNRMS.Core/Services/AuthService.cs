@@ -28,6 +28,7 @@ namespace SNRMS.Core.Services
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) return null;
             var user = await _dbContext.Users
+                .Where(u => u.IsActive)
                 .Include(u => u.Instructor)
                 .FirstOrDefaultAsync(u => u.Username == username);
             if (user == null || user.Username != username)

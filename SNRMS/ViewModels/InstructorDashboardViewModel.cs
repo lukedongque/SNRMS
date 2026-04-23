@@ -44,6 +44,36 @@ namespace SNRMS.ViewModels
         public partial Group? GroupToTransfer { get; set; }
         [ObservableProperty] public partial Student? SelectedGroupMember { get; set; }
 
+        //EDIT STUDENT ---------------------
+        [ObservableProperty]
+        public partial string EditStudentFirstName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string EditStudentLastName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string EditStudentEmail { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string EditStudentNumber { get; set; } = string.Empty;
+
+        public async Task SaveStudentEditAsync()
+        {
+            if (SelectedStudent == null) return;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                var updated = await _studentService.UpdateStudentAsync(
+                    SelectedStudent.StudentId,
+                    EditStudentFirstName,
+                    EditStudentLastName,
+                    EditStudentEmail,
+                    EditStudentNumber);
+                await LoadDataAsync();
+                SuccessMessage = "Student information updated successfully.";
+            }
+            finally { IsLoading = false; }
+        }
+
         //STUDENTS ---------------------
         [ObservableProperty]
         public partial Student? SelectedStudent { get; set; }
@@ -126,6 +156,9 @@ namespace SNRMS.ViewModels
 
         [ObservableProperty]
         public partial string InstructorEmployeeId { get; set; } = string.Empty;
+        private bool _isAutofilled = false;
+        private int? _foundStudentId = null;
+
 
         [RelayCommand]
         public void Logout()
@@ -328,17 +361,56 @@ namespace SNRMS.ViewModels
             SuccessMessage = string.Empty;
             try
             {
-                var student = await _studentService.CreateStudentAsync(StudentFirstName, StudentLastName, StudentEmail, StudentNumber);
-                if (student != null)
+                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                Section? section = null;
+                try
                 {
-                    Students.Add(student);
-                    StudentFirstName = string.Empty;
-                    StudentLastName = string.Empty;
-                    StudentEmail = string.Empty;
-                    StudentNumber = string.Empty;
+                    section = await _sectionService.GetInstructorSectionAsync(instructorId);
                 }
+                catch
+                {
+                    // If GetInstructorSectionAsync throws an error because none is found
+                    ErrorMessage = "Error: You cannot add students until an Admin assigns you to a Section.";
+                    return;
+                }
+
+                if (section == null)
+                {
+                    ErrorMessage = "Error: No assigned section found for your account.";
+                    return;
+                }
+                var existingStudent = await _studentService.GetStudentByNumberAsync(StudentNumber);
+
+                if (existingStudent != null)
+                {
+                    // Scenario A: Student is Active
+                    if (!existingStudent.IsArchived)
+                    {
+                        ErrorMessage = "Error: Student belongs to another section and is currently active.";
+                        return;
+                    }
+
+                    // Scenario B: Student is Archived - Reactivate them
+                    await _studentService.ReactivateStudentAsync(existingStudent.StudentId);
+                    SuccessMessage = $"Student {existingStudent.FirstName} has been un-archived. You can now assign them to a group.";
+                    ClearAutofill();
+                }
+                else
+                {
+                    var student = await _studentService.CreateStudentAsync(StudentFirstName, StudentLastName, StudentEmail, StudentNumber);
+                    if (student != null)
+                    {
+                        Students.Add(student);
+                        StudentFirstName = string.Empty;
+                        StudentLastName = string.Empty;
+                        StudentEmail = string.Empty;
+                        StudentNumber = string.Empty;
+                    }
+                    SuccessMessage = "Student created successfully.";
+
+                }
+
                 await LoadDataAsync();
-                SuccessMessage = "Student created successfully.";
             }
             catch (Exception ex)
             {
@@ -566,7 +638,7 @@ namespace SNRMS.ViewModels
         {
             FilteredStations.Clear();
             if (value != null)
-                foreach (var station in Stations.Where(s => s.HospitalId == value.HospitalId))
+                foreach (var station in Stations.Where(s => s.HospitalId == value.HospitalId && !s.IsArchived))
                     FilteredStations.Add(station);
         }
 
@@ -679,7 +751,7 @@ namespace SNRMS.ViewModels
         }
 
         [RelayCommand]
-        public async Task LoadAttendanceAsync()
+        public async Task LoadFilteredAttendanceAsync()
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
@@ -689,23 +761,20 @@ namespace SNRMS.ViewModels
                 if (AttendanceFilterRotation != null)
                 {
                     records = await _attendanceService.GetAttendanceByRotationAsync(AttendanceFilterRotation.RotationAssignmentId, DateOnly.FromDateTime(AttendanceFilterDate.Date));
-                }
-                else
+                    AttendanceRecords.Clear();
+                    foreach (var record in records)
+                        AttendanceRecords.Add(record);
+                    if (AttendanceRecords.Count == 0)
+                    {
+                        HasNoAttendanceRecords = true;
+                    }
+                    else HasNoAttendanceRecords = false;
+                } else
                 {
-                    var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
-                    var section = await _sectionService.GetInstructorSectionAsync(instructorId);
-                    records = await _attendanceService.GetAttendanceBySectionAndDateAsync(
-                        section.SectionId,
-                        DateOnly.FromDateTime(AttendanceFilterDate.Date));
+                    ErrorMessage = "Select Rotation";
                 }
-                AttendanceRecords.Clear();
-                foreach (var record in records)
-                    AttendanceRecords.Add(record);
-                if (AttendanceRecords.Count == 0)
-                {
-                    HasNoAttendanceRecords = true;
-                }
-                else HasNoAttendanceRecords = false;
+                
+                
             }
             catch (Exception ex)
             {
@@ -713,5 +782,88 @@ namespace SNRMS.ViewModels
             }
             finally { IsLoading = false; }
         }
+
+        [RelayCommand]
+
+        public async Task LoadAllAttendanceAsync()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                List<AttendanceRecord> records;
+                
+                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                var section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                records = await _attendanceService.GetAttendanceBySectionAndDateAsync(
+                    section.SectionId,
+                    DateOnly.FromDateTime(AttendanceFilterDate.Date));
+                    AttendanceRecords.Clear();
+                    foreach (var record in records)
+                        AttendanceRecords.Add(record);
+                    if (AttendanceRecords.Count == 0)
+                    {
+                        HasNoAttendanceRecords = true;
+                    }
+                    else HasNoAttendanceRecords = false;
+                
+                                
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error loading attendance: {ex.Message}";
+            }
+            finally { IsLoading = false; }
+
+        }
+
+
+
+        partial void OnStudentNumberChanged(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                ClearAutofill();
+                return;
+            }
+
+            // Trigger lookup
+            _ = LookupStudentAsync(value);
+        }
+
+        private async Task LookupStudentAsync(string number)
+        {
+            var student = await _studentService.GetStudentByNumberAsync(number);
+
+            if (student != null)
+            {
+                StudentFirstName = student.FirstName;
+                StudentLastName = student.LastName;
+                StudentEmail = student.Email;
+                _foundStudentId = student.StudentId;
+                _isAutofilled = true;
+
+                if (!student.IsArchived)
+                {
+                    ErrorMessage = $"Note: This student is already active in {student.Group?.Section?.SectionName ?? "another section"}.";
+                }
+            }
+            else
+            {
+                // Only clear names if we were previously in an autofilled state
+                if (_isAutofilled) ClearAutofill();
+            }
+        }
+
+        private void ClearAutofill()
+        {
+            _isAutofilled = false;
+            _foundStudentId = null;
+            StudentFirstName = string.Empty;
+            StudentLastName = string.Empty;
+            StudentEmail = string.Empty;
+            ErrorMessage = string.Empty;
+        }
+
     }
 }

@@ -261,7 +261,7 @@
                                          Text="{Binding StudentEmail, Mode=TwoWay}"
                                          Width="200" PlaceholderText="email@school.com"/>
                                 <TextBox Header="Student Number" 
-                                         Text="{Binding StudentNumber, Mode=TwoWay}"
+                                         Text="{Binding StudentNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Width="150" PlaceholderText="e.g. 2021-0001"/>
                                 <Button Content="Add Student" VerticalAlignment="Bottom"
                                         Command="{Binding CreateStudentCommand}"
@@ -281,7 +281,7 @@
                                     <TextBlock Text="Search: " FontWeight="SemiBold" 
                                                 VerticalAlignment="Center" Foreground="#718096" FontSize="12" Margin="80,0,0,0"/>
                                     <TextBox Text="{Binding StudentSearchQuery, Mode=TwoWay}"
-                                                Width="150" PlaceholderText="First Name"/>
+                                                Width="150"/>
                                     <Button Content="Search" VerticalAlignment="Bottom"
                                                 Command="{Binding SearchStudentCommand}"
                                                 Background="#E2E8F0" Foreground="#2D3748" CornerRadius="6"/>
@@ -414,6 +414,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <ComboBox Grid.Column="0" Header="Group"
@@ -448,8 +449,11 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
+                                <TextBox Grid.Column="3" Header="Station Capacity"
+                                         IsReadOnly="True"
+                                         Text="{Binding SelectedStation.Capacity}"/>
 
-                                <ComboBox Grid.Column="3" Header="Day Slot"
+                                <ComboBox Grid.Column="4" Header="Day Slot"
                                           ItemsSource="{Binding DaySlotsList}"
                                           SelectedItem="{Binding DaySlot, Mode=TwoWay}"
                                           HorizontalAlignment="Stretch"/>
@@ -674,10 +678,16 @@
                                     <!-- Filter by Date -->
                                     <DatePicker Header="Filter by Date"
                                                 Date="{Binding AttendanceFilterDate, Mode=TwoWay}"/>
+                                    <!-- Load Filter Button -->
+                                    <Button Content="Filter"
+                                            Command="{Binding LoadFilteredAttendanceCommand}"
+                                            VerticalAlignment="Bottom"
+                                            Background="#1B3A6B" Foreground="White" CornerRadius="8"
+                                            Padding="16,8"/>
 
-                                    <!-- Load Button -->
+                                    <!-- Load All Button -->
                                     <Button Content="Load Attendance"
-                                            Command="{Binding LoadAttendanceCommand}"
+                                            Command="{Binding LoadAllAttendanceCommand}"
                                             VerticalAlignment="Bottom"
                                             Background="#1B3A6B" Foreground="White" CornerRadius="8"
                                             Padding="16,8"/>

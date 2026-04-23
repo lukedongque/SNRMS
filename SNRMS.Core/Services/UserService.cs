@@ -83,8 +83,36 @@ namespace SNRMS.Core.Services
                 throw new InvalidOperationException("User is already active.");
             user.IsActive = true;
             await _dbContext.SaveChangesAsync();
-          
             return user;
         }
+
+        public async Task<Instructor?> UpdateInstructorAsync(int instructorId, string firstName, string lastName, string email, string employeeId)
+        {
+            if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) ||
+                string.IsNullOrEmpty(email) || string.IsNullOrEmpty(employeeId))
+                throw new ArgumentException("All fields are required.");
+
+            var instructor = await _dbContext.Instructors.FindAsync(instructorId);
+            if (instructor == null)
+                throw new InvalidOperationException("Instructor not found.");
+
+            var duplicate = await _dbContext.Instructors
+                .AnyAsync(i => i.EmployeeId == employeeId && i.InstructorId != instructorId);
+            if (duplicate)
+                throw new InvalidOperationException("An instructor with this Employee ID already exists.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.InstructorId == instructorId);
+
+            instructor.FirstName = firstName;
+            instructor.LastName = lastName;
+            instructor.Email = email;
+            instructor.EmployeeId = employeeId;
+
+            if (user != null)
+                user.Username = employeeId;
+
+            await _dbContext.SaveChangesAsync();
+            return instructor;
         }
+    }
 }

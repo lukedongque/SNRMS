@@ -61,6 +61,24 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return student;
         }
+        public async Task<Student> ReactivateStudentAsync(int studentId)
+        {
+            var student = await _dbContext.Students.FindAsync(studentId);
+            if (student == null) throw new InvalidOperationException("Student not found.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.StudentId == studentId);
+
+            student.IsArchived = false;
+            student.GroupId = null; // Ensure they start without a group as requested
+
+            if (user != null)
+            {
+                user.IsActive = true; // Give them access back
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return student;
+        }
 
         public async Task<List<Student>> GetStudentsByGroupAsync(int groupId) //get students in a group
         {
@@ -85,22 +103,72 @@ namespace SNRMS.Core.Services
                 throw new ArgumentException("Student not found");
             return student;
         }
-
-        public async Task<Student?> TransferStudentAsync(int studentId, int newGroupId) //transfer student to different group
+        public async Task<Student?> GetStudentByNumberAsync(string studentNumber)
         {
+         
+            return await _dbContext.Students
+                .Include(s => s.Group).ThenInclude(g => g.Section)
+                .FirstOrDefaultAsync(s => s.StudentNumber == studentNumber);
+        }
+
+        public async Task<Student?> TransferStudentAsync(int studentId, int newGroupId)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
             var student = await _dbContext.Students.FindAsync(studentId);
-            if (student == null)
-                throw new InvalidOperationException("Student not found.");
-            var newGroup = await _dbContext.Groups.FindAsync(newGroupId);
-            if (newGroup == null)
-                throw new InvalidOperationException("New group not found.");
-            if (student.GroupId == newGroupId)
-                throw new InvalidOperationException("Student is already in this group.");
+            if (student == null) throw new InvalidOperationException("Student not found.");
+
+            var newGroup = await _dbContext.Groups
+                .Include(g => g.RotationAssignments)
+                .FirstOrDefaultAsync(g => g.GroupId == newGroupId);
+
+            if (newGroup == null) throw new InvalidOperationException("New group not found.");
+            if (student.GroupId == newGroupId) throw new InvalidOperationException("Student is already in this group.");
+
+            // 1. Remove future StudentRotationHistory entries from the OLD group
+            //    (keep past/completed ones so rotation history is preserved)
+            if (student.GroupId != null)
+            {
+                var oldGroupRotationIds = await _dbContext.RotationAssignments
+                    .Where(ra => ra.GroupId == student.GroupId && ra.EndDate >= today)
+                    .Select(ra => ra.RotationAssignmentId)
+                    .ToListAsync();
+
+                var staleHistories = await _dbContext.StudentRotationHistories
+                    .Where(h => h.StudentId == studentId &&
+                                oldGroupRotationIds.Contains(h.RotationAssignmentId))
+                    .ToListAsync();
+
+                _dbContext.StudentRotationHistories.RemoveRange(staleHistories);
+            }
+
+            // 2. Assign student to new group
             student.GroupId = newGroupId;
+
+            // 3. Catch-up: add history entries for new group's current + future rotations
+            var upcomingRotations = newGroup.RotationAssignments
+                .Where(ra => !ra.IsArchived && ra.EndDate >= today)
+                .ToList();
+
+            foreach (var ra in upcomingRotations)
+            {
+                var alreadyLinked = await _dbContext.StudentRotationHistories
+                    .AnyAsync(h => h.StudentId == studentId &&
+                                   h.RotationAssignmentId == ra.RotationAssignmentId);
+
+                if (!alreadyLinked)
+                {
+                    _dbContext.StudentRotationHistories.Add(new StudentRotationHistory
+                    {
+                        StudentId = studentId,
+                        RotationAssignmentId = ra.RotationAssignmentId
+                    });
+                }
+            }
+
             await _dbContext.SaveChangesAsync();
             return student;
         }
-
         public async Task<List<Student>> CreateBulkAccountStudentAsync(List<Student> student)// create bulk student accounts
         {
             foreach (var s in student)
@@ -143,6 +211,35 @@ namespace SNRMS.Core.Services
                             s.StudentNumber.Contains(searchTerm)))
                 .Include(s => s.Group)
                 .ToListAsync();
+        }
+
+        public async Task<Student?> UpdateStudentAsync(int studentId, string firstName, string lastName, string email, string studentNumber)
+        {
+            if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) ||
+                string.IsNullOrEmpty(email) || string.IsNullOrEmpty(studentNumber))
+                throw new ArgumentException("All fields are required.");
+
+            var student = await _dbContext.Students.FindAsync(studentId);
+            if (student == null)
+                throw new InvalidOperationException("Student not found.");
+
+            var duplicate = await _dbContext.Students
+                .AnyAsync(s => s.StudentNumber == studentNumber && s.StudentId != studentId);
+            if (duplicate)
+                throw new InvalidOperationException("A student with this student number already exists.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.StudentId == studentId);
+
+            student.FirstName = firstName;
+            student.LastName = lastName;
+            student.Email = email;
+            student.StudentNumber = studentNumber;
+
+            if (user != null)
+                user.Username = studentNumber;
+
+            await _dbContext.SaveChangesAsync();
+            return student;
         }
     }
 }
