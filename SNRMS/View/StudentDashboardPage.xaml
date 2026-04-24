@@ -465,6 +465,51 @@
                     </StackPanel>
                 </ScrollViewer>
 
+                <!-- SETTINGS PANEL -->
+                <Grid Padding="32">
+                    <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
+
+                            <StackPanel>
+                                <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                <TextBlock Text="Manage your account security and application preferences" 
+                            FontSize="14" Foreground="#909191"/>
+                            </StackPanel>
+
+                            <Border Background="White" CornerRadius="12" Padding="24" 
+                    BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="16">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <FontIcon Glyph="&#xE72E;" Foreground="#1B3A6B" FontSize="20"/>
+                                        <TextBlock Text="Account Security" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Rectangle Height="1" Fill="#F0F4F8"/>
+
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Password" FontWeight="SemiBold" FontSize="14"/>
+                                        <TextBlock Text="It's a good idea to use a strong password that you're not using elsewhere." 
+                                    Foreground="#718096" FontSize="13" TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <Button Content="Change Password" 
+                                            Click="ChangePassword_Click"
+                                            Background="#1B3A6B" Foreground="White"
+                                            Padding="24,10" CornerRadius="8"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                </Grid>
+                <!-- Messages -->
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#E53E3E" 
+                           VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding SuccessMessage}" Foreground="#38A169" 
+                           VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+
             </Grid>
         </NavigationView>
     </Grid>

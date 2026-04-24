@@ -18,6 +18,7 @@ namespace SNRMS.ViewModels
         private readonly SectionService _sectionService;
         private readonly HospitalService _hospitalService;
         private readonly AttendanceService _attendanceService;
+        private readonly UserService _userService;
 
         public InstructorDashboardViewModel()
         {
@@ -27,6 +28,7 @@ namespace SNRMS.ViewModels
             _sectionService = new SectionService(App.Database);
             _hospitalService = new HospitalService(App.Database);
             _attendanceService = new AttendanceService(App.Database);
+            _userService = new UserService(App.Database);
             HasNoAttendanceRecords = true;
         }
 
@@ -153,6 +155,8 @@ namespace SNRMS.ViewModels
         public partial string SuccessMessage { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string InstructorDisplayName { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string InstructorEmail { get; set; } = string.Empty;
 
         [ObservableProperty]
         public partial string InstructorEmployeeId { get; set; } = string.Empty;
@@ -189,6 +193,7 @@ namespace SNRMS.ViewModels
                 {
                     InstructorDisplayName = $"{user.Instructor.FirstName} {user.Instructor.LastName}";
                     InstructorEmployeeId = $"ID: {user.Instructor.EmployeeId}";
+                    InstructorEmail = $"{user.Instructor.Email}";
                 }
                 else
                 {
@@ -818,7 +823,43 @@ namespace SNRMS.ViewModels
         }
 
 
+        public async Task ChangePasswordAsync(string currentPwd, string newPwd)
+        {
+            // Clear previous messages
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
 
+            try
+            {
+                // 1. Get the current logged-in User ID from your SessionManager
+                var user = SessionManager.CurrentUser;
+                if (user == null)
+                {
+                    throw new Exception("Session expired. Please log in again.");
+                }
+
+                // 2. Call the UserService (ensure _userService is initialized in constructor)
+                // This will throw an exception if the current password doesn't match 
+                // or if the logic in your UserService fails.
+                var updatedUser = await _userService.ChangePasswordAsync(user.UserId, currentPwd, newPwd);
+
+                if (updatedUser != null)
+                {
+                    // 3. Update the Success Message for the UI
+                    SuccessMessage = "Your password has been updated successfully.";
+
+                    // Optional: Update the local session object if needed
+                    SessionManager.CurrentUser.HasChangedPassword = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // We re-throw the exception here because our ContentDialog loop 
+                // in the code-behind is waiting to catch it and show it inside the dialog.
+                ErrorMessage = ex.Message;
+                throw;
+            }
+        }
         partial void OnStudentNumberChanged(string value)
         {
             if (string.IsNullOrWhiteSpace(value))

@@ -15,12 +15,14 @@ namespace SNRMS.ViewModels
         private readonly RotationService _rotationService;
         private readonly StudentService _studentService;
         private readonly AttendanceService _attendanceService;
+        private readonly UserService _userService;
 
         public StudentDashboardViewModel()
         {
             _rotationService = new RotationService(App.Database);
             _studentService = new StudentService(App.Database);
             _attendanceService = new AttendanceService(App.Database);
+            _userService = new UserService(App.Database);
         }
 
         //STUDENT -----------------------------------------------------------------------
@@ -69,6 +71,8 @@ namespace SNRMS.ViewModels
         [ObservableProperty]
         public partial string ErrorMessage { get; set; } = string.Empty;
         [ObservableProperty]
+        public partial string SuccessMessage { get; set; } = string.Empty;
+        [ObservableProperty]
         public partial bool IsLoading { get; set; }
 
         // Computed display strings for CurrentRotation card
@@ -80,6 +84,25 @@ namespace SNRMS.ViewModels
         public string CurrentDateRange => CurrentRotation != null
             ? $"{CurrentRotation.StartDate:MMM dd, yyyy}  –  {CurrentRotation.EndDate:MMM dd, yyyy}"
             : "—";
+
+        // Attendance button state
+        public bool CanMarkAttendance => HasCurrentRotation && !AlreadyMarkedAttendance;
+        public bool CanClockOut => HasCurrentRotation && AlreadyMarkedAttendance && !AlreadyClockedOut;
+
+        partial void OnHasCurrentRotationChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanMarkAttendance));
+            OnPropertyChanged(nameof(CanClockOut));
+        }
+        partial void OnAlreadyMarkedAttendanceChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanMarkAttendance));
+            OnPropertyChanged(nameof(CanClockOut));
+        }
+        partial void OnAlreadyClockedOutChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanClockOut));
+        }
 
         // Computed display strings for NextRotation card
         public string NextHospitalName => NextRotation?.Station?.Hospital?.HospitalName ?? "—";
@@ -146,8 +169,7 @@ namespace SNRMS.ViewModels
                     var history = await _rotationService.GetStudentRotationHistoryAsync(studentId);
                     RotationHistory = new ObservableCollection<RotationAssignment>(history);
 
-                    // Schedule = current + future (everything not yet ended)
-                    var allAssignments = await _rotationService.GetStudentAllAssignmentsAsync(studentId); // see note below
+                    var allAssignments = await _rotationService.GetStudentAllAssignmentsAsync(studentId); 
                     ScheduleAssignments = new ObservableCollection<RotationAssignment>(
                         allAssignments
                             .Where(r => r.EndDate >= Today)
@@ -233,5 +255,36 @@ namespace SNRMS.ViewModels
                 ClockOutStatusMessage = ex.Message;
             }
         }
+
+        public async Task ChangePasswordAsync(string currentPwd, string newPwd)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+
+            try
+            {
+                var user = SessionManager.CurrentUser;
+                if (user == null)
+                {
+                    throw new Exception("Session expired. Please log in again.");
+                }
+
+                
+                var updatedUser = await _userService.ChangePasswordAsync(user.UserId, currentPwd, newPwd);
+
+                if (updatedUser != null)
+                {
+                    SuccessMessage = "Your password has been updated successfully.";
+
+                    SessionManager.CurrentUser.HasChangedPassword = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+                throw;
+            }
+        }
+
     }
 }

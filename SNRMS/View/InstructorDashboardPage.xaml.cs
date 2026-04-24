@@ -26,7 +26,13 @@ namespace SNRMS.View
             StudentsPanel.Visibility = Visibility.Collapsed;
             RotationsPanel.Visibility = Visibility.Collapsed;
             AttendancePanel.Visibility = Visibility.Collapsed;
+            SettingsPanel.Visibility = Visibility.Collapsed;
 
+            if (args.IsSettingsSelected)
+            {
+                SettingsPanel.Visibility = Visibility.Visible;
+                return;
+            }
             var tag = (args.SelectedItem as NavigationViewItem)?.Tag?.ToString();
             switch (tag)
             {
@@ -101,6 +107,59 @@ namespace SNRMS.View
                 }
             };
 
+            await dialog.ShowAsync();
+        }
+
+        private async void ChangePassword_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = (InstructorDashboardViewModel)DataContext;
+            var currentPasswordBox = new PasswordBox { Header = "Current Password", Margin = new Thickness(0, 0, 0, 8) };
+            var newPasswordBox = new PasswordBox { Header = "New Password", Margin = new Thickness(0, 0, 0, 8) };
+            var confirmPasswordBox = new PasswordBox { Header = "Confirm New Password", Margin = new Thickness(0, 0, 0, 8) };
+            var errorText = new TextBlock { Foreground = new SolidColorBrush(Colors.Red), FontSize = 12, Visibility = Visibility.Collapsed };
+            var form = new StackPanel { Width = 340 };
+            form.Children.Add(currentPasswordBox);
+            form.Children.Add(newPasswordBox);
+            form.Children.Add(confirmPasswordBox);
+            form.Children.Add(errorText);
+            var dialog = new ContentDialog
+            {
+                Title = "Change Password",
+                Content = form,
+                PrimaryButtonText = "Change Password",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = this.XamlRoot
+            };
+            dialog.PrimaryButtonClick += async (s, args) =>
+            {
+                args.Cancel = true;
+                errorText.Visibility = Visibility.Collapsed;
+                if (string.IsNullOrWhiteSpace(currentPasswordBox.Password) ||
+                    string.IsNullOrWhiteSpace(newPasswordBox.Password)     ||
+                    string.IsNullOrWhiteSpace(confirmPasswordBox.Password))
+                {
+                    errorText.Text = "All fields are required.";
+                    errorText.Visibility = Visibility.Visible;
+                    return;
+                }
+                if (newPasswordBox.Password != confirmPasswordBox.Password)
+                {
+                    errorText.Text = "New password and confirmation do not match.";
+                    errorText.Visibility = Visibility.Visible;
+                    return;
+                }
+                try
+                {
+                    await vm.ChangePasswordAsync(currentPasswordBox.Password, newPasswordBox.Password);
+                    dialog.Hide();
+                }
+                catch (Exception ex)
+                {
+                    errorText.Text = ex.Message;
+                    errorText.Visibility = Visibility.Visible;
+                }
+            };
             await dialog.ShowAsync();
         }
 

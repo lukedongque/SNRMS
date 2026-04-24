@@ -230,13 +230,23 @@ namespace SNRMS.Core.Services
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.StudentId == studentId);
 
+            // Capture old student number BEFORE updating — needed for password check
+            var oldStudentNumber = student.StudentNumber;
+
             student.FirstName = firstName;
             student.LastName = lastName;
             student.Email = email;
             student.StudentNumber = studentNumber;
 
             if (user != null)
+            {
                 user.Username = studentNumber;
+
+                // Only update password if the student never changed it from the default
+                if (!user.HasChangedPassword)
+                    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(studentNumber);
+                // else: student set a custom password — leave it untouched
+            }
 
             await _dbContext.SaveChangesAsync();
             return student;

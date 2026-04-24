@@ -390,6 +390,11 @@
                                 <Button Content="Transfer" VerticalAlignment="Bottom"
                                         Command="{Binding TransferStudentCommand}"
                                         Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
+                                <Button Content="Edit Student"
+                                        VerticalAlignment="Bottom"
+                                        Click="EditStudent_Clicked"
+                                        Background="#1B3A6B" Foreground="White"
+                                        CornerRadius="8" />   
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -637,8 +642,7 @@
                     
                 </StackPanel>
                 
-                
-
+               
                 <!-- ATTENDANCE PANEL -->
                 <ScrollViewer x:Name="AttendancePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="20">
@@ -808,6 +812,105 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+
+                <!-- SETTINGS PANEL -->
+                <Grid Padding="32">
+                    <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
+
+                            <StackPanel>
+                                <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                <TextBlock Text="Manage your account security and application preferences" 
+                                            FontSize="14" Foreground="#909191"/>
+                            </StackPanel>
+
+                            <Border Background="White" CornerRadius="12" Padding="24" 
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="16">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <FontIcon Glyph="&#xE72E;" Foreground="#1B3A6B" FontSize="20"/>
+                                        <TextBlock Text="Account Security" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Rectangle Height="1" Fill="#F0F4F8"/>
+
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Password" FontWeight="SemiBold" FontSize="14"/>
+                                        <TextBlock Text="It's a good idea to use a strong password that you're not using elsewhere." 
+                                                    Foreground="#718096" FontSize="13" TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <Button Content="Change Password" 
+                                            Click="ChangePassword_Click"
+                                            Background="#1B3A6B" Foreground="White"
+                                            Padding="24,10" CornerRadius="8"
+                                            HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="White" CornerRadius="12" Padding="24" 
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
+                                <StackPanel Spacing="16">
+                                    <TextBlock Text="Profile Information" FontSize="18" FontWeight="SemiBold"/>
+                                    <Grid ColumnSpacing="20" RowSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock  Text="Full Name" Foreground="#718096" VerticalAlignment="Center"/>
+                                            <TextBlock  Text="{Binding InstructorDisplayName}" FontWeight="Medium"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock  Text="Employee ID" Foreground="#718096" VerticalAlignment="Center"/>
+                                            <TextBlock  Text="{Binding InstructorEmployeeId}" FontWeight="Medium"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock  Text="Email" Foreground="#718096" VerticalAlignment="Center"/>
+                                            <TextBlock  Text="{Binding InstructorEmail}" FontWeight="Medium"/>
+                                        </StackPanel>
+
+                                       
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                </Grid>
+
+                <ContentDialog x:Name="ChangePasswordDialog"
+                               Title="Change Password"
+                               PrimaryButtonText="Save Changes"
+                               CloseButtonText="Cancel"
+                               DefaultButton="Primary"
+                               Style="{StaticResource DefaultContentDialogStyle}">
+                    <StackPanel Spacing="16" Width="320">
+                        <PasswordBox x:Name="CurrentPasswordBox" 
+                                     Header="Current Password" 
+                                     PlaceholderText="Verify current password"
+                                     PasswordRevealMode="Hidden"/>
+
+                        <Rectangle Height="1" Fill="#E2E8F0" Margin="0,8"/>
+
+                        <PasswordBox x:Name="NewPasswordBox" 
+                                     Header="New Password" 
+                                     PlaceholderText="Minimum 6 characters"
+                                     PasswordRevealMode="Hidden"/>
+
+                        <PasswordBox x:Name="ConfirmPasswordBox" 
+                                     Header="Confirm New Password" 
+                                     PlaceholderText="Repeat new password"
+                                     PasswordRevealMode="Hidden"/>
+
+                        <InfoBar x:Name="DialogInfoBar" 
+                                 IsOpen="False" 
+                                 Severity="Error" 
+                                 FontSize="12"/>
+                    </StackPanel>
+                </ContentDialog>
 
                 <!-- Messages -->
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="#E53E3E" 

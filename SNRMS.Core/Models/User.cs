@@ -11,6 +11,7 @@ namespace SNRMS.Core.Models
         public string PasswordHash { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+        public bool HasChangedPassword { get; set; } = false;
 
         public int? StudentId { get; set; }
         public int? InstructorId { get; set; }

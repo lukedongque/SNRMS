@@ -27,7 +27,6 @@ namespace SNRMS.ViewModels
         private readonly InstructorService _instructorService;
         private readonly HospitalService _hospitalService;
         private readonly UserService _userService;
-        private readonly AttendanceService _attendanceService;
 
         public AdminPanelViewModel()
         {
@@ -35,7 +34,6 @@ namespace SNRMS.ViewModels
             _instructorService = new InstructorService(App.Database);
             _hospitalService = new HospitalService(App.Database);
             _userService = new UserService(App.Database);
-            _attendanceService = new AttendanceService(App.Database);
         }
 
         //SECTION ------------------
@@ -92,6 +90,38 @@ namespace SNRMS.ViewModels
             finally { IsLoading = false; }
         }
 
+        // SETTINGS: Admin change own password
+        public async Task ChangePasswordAsync(string currentPwd, string newPwd)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            var user = SessionManager.CurrentUser;
+            if (user == null) throw new Exception("Session expired. Please log in again.");
+            await _userService.ChangePasswordAsync(user.UserId, currentPwd, newPwd);
+            SessionManager.CurrentUser.HasChangedPassword = true;
+            SuccessMessage = "Password changed successfully.";
+        }
+
+        // SETTINGS: Admin reset instructor password
+        public async Task<Instructor?> ResetInstructorPasswordAsync(string employeeId)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            var instructor = await _userService.ResetInstructorPasswordAsync(employeeId);
+            SuccessMessage = $"Password reset to 'user123' for {instructor?.FirstName} {instructor?.LastName}.";
+            return instructor;
+        }
+
+        // SETTINGS: Admin reset student password
+        public async Task<Student?> ResetStudentPasswordAsync(string studentNumber)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            var student = await _userService.ResetStudentPasswordAsync(studentNumber);
+            SuccessMessage = $"Password reset to student number for {student?.FirstName} {student?.LastName}.";
+            return student;
+        }
+
         //HOSPITAL ------------------
         [ObservableProperty]
         public partial Hospital? SelectedHospital { get; set; }
@@ -120,6 +150,11 @@ namespace SNRMS.ViewModels
         public partial string SuccessMessage { get; set; } = string.Empty;
         [ObservableProperty]
         public partial string SelectedSort { get; set; } = string.Empty;
+        [ObservableProperty]
+        public partial string ResetStudentNumber { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string ResetEmployeeId { get; set; } = string.Empty;
 
 
         //COLLECTIONS / LISTS -------------------
@@ -144,13 +179,13 @@ namespace SNRMS.ViewModels
 
         // ── ANALYTICS ──────────────────────────────────────────────────
         // Summary cards
-        [ObservableProperty] public partial int TotalStudents    { get; set; }
+        [ObservableProperty] public partial int TotalStudents { get; set; }
         [ObservableProperty] public partial int TotalInstructors { get; set; }
-        [ObservableProperty] public partial int TotalGroups      { get; set; }
-        [ObservableProperty] public partial int TotalHospitals   { get; set; }
-        [ObservableProperty] public partial int TotalStations    { get; set; }
-        [ObservableProperty] public partial int TotalRotations   { get; set; }
-        [ObservableProperty] public partial int ActiveRotations  { get; set; }
+        [ObservableProperty] public partial int TotalGroups { get; set; }
+        [ObservableProperty] public partial int TotalHospitals { get; set; }
+        [ObservableProperty] public partial int TotalStations { get; set; }
+        [ObservableProperty] public partial int TotalRotations { get; set; }
+        [ObservableProperty] public partial int ActiveRotations { get; set; }
         [ObservableProperty] public partial int UnassignedSections { get; set; }
 
         // Bar chart: students per section (list of label+value)
@@ -214,7 +249,7 @@ namespace SNRMS.ViewModels
             try
             {
                 var sections = await _sectionService.GetAllSectionsAsync();
-                Sections.Clear();   
+                Sections.Clear();
                 foreach (var section in sections)
                     Sections.Add(section);
                 var instructors = await _instructorService.GetAllInstructorsAsync();
@@ -222,7 +257,7 @@ namespace SNRMS.ViewModels
                 ActiveInstructors.Clear();
                 foreach (var instructor in instructors)
                     Instructors.Add(instructor);
-                foreach(var instructor in instructors)
+                foreach (var instructor in instructors)
                 {
                     var instructorUser = await App.Database.Users.FirstOrDefaultAsync(u => u.InstructorId == instructor.InstructorId);
                     if (instructorUser != null && instructorUser.IsActive)
@@ -518,7 +553,7 @@ namespace SNRMS.ViewModels
             ErrorMessage = string.Empty;
             try
             {
-                if(string.IsNullOrEmpty(InstructorSearchQuery))
+                if (string.IsNullOrEmpty(InstructorSearchQuery))
                 {
                     await LoadDataAsync();
                     return;
@@ -680,7 +715,7 @@ namespace SNRMS.ViewModels
                     ErrorMessage = "Please select a hospital.";
                     return;
                 }
-                if(!int.TryParse(StationCapacity, out int capacity) || capacity < 0)
+                if (!int.TryParse(StationCapacity, out int capacity) || capacity < 0)
                 {
                     ErrorMessage = "Please input a valid numerical value for station capacity.";
                     return;
@@ -732,7 +767,7 @@ namespace SNRMS.ViewModels
             }
         }
 
-         
+
         // ── ANALYTICS LOAD COMMAND ────────────────────────────────────
         [RelayCommand]
         public async Task LoadAnalyticsAsync()
@@ -743,13 +778,13 @@ namespace SNRMS.ViewModels
             {
                 var today = DateOnly.FromDateTime(DateTime.Today);
                 // Summary counts
-                TotalStudents    = await App.Database.Students.CountAsync(s => !s.IsArchived);
+                TotalStudents = await App.Database.Students.CountAsync(s => !s.IsArchived);
                 TotalInstructors = await App.Database.Instructors.Where(i => i.User != null && i.User.IsActive == true).CountAsync();
-                TotalGroups      = await App.Database.Groups.CountAsync(g => !g.IsArchived);
-                TotalHospitals   = await App.Database.Hospitals.CountAsync();
-                TotalStations    = await App.Database.Stations.CountAsync(s => !s.IsArchived);
-                TotalRotations   = await App.Database.RotationAssignments.CountAsync(r => !r.IsArchived);
-                ActiveRotations  = await App.Database.RotationAssignments
+                TotalGroups = await App.Database.Groups.CountAsync(g => !g.IsArchived);
+                TotalHospitals = await App.Database.Hospitals.CountAsync();
+                TotalStations = await App.Database.Stations.CountAsync(s => !s.IsArchived);
+                TotalRotations = await App.Database.RotationAssignments.CountAsync(r => !r.IsArchived);
+                ActiveRotations = await App.Database.RotationAssignments
                     .CountAsync(r => !r.IsArchived && r.StartDate <= today && r.EndDate >= today);
                 UnassignedSections = await App.Database.Sections.CountAsync(s => s.InstructorId == null);
 
@@ -801,9 +836,9 @@ namespace SNRMS.ViewModels
                         var byGroup = hospitalRotations
                             .GroupBy(r => new
                             {
-                                GroupName   = r.Group?.GroupName ?? "No Group",
+                                GroupName = r.Group?.GroupName ?? "No Group",
                                 SectionName = r.Group?.Section?.SectionName ?? "No Section",
-                                YearLevel   = r.Group?.Section?.YearLevel ?? 0
+                                YearLevel = r.Group?.Section?.YearLevel ?? 0
                             })
                             .OrderBy(g => g.Key.YearLevel)
                             .ThenBy(g => g.Key.SectionName)
@@ -1020,7 +1055,7 @@ namespace SNRMS.ViewModels
                         MinLimit = 0,
                         MaxLimit = 100,
                         TextSize = 11
-                        
+
                     }
                 };
 
@@ -1038,6 +1073,64 @@ namespace SNRMS.ViewModels
         public void Logout()
         {
             SessionManager.Logout();
+        }
+
+        // RESET PASSWORD COMMANDS ----------------------------------------------------------------------
+        [RelayCommand]
+        public async Task ResetInstructorPasswordAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                if (SelectedInstructor == null)
+                {
+                    ErrorMessage = "Please select an instructor to reset password.";
+                    return;
+                }
+                var resetInstructor = await _userService.ResetInstructorPasswordAsync(SelectedInstructor.EmployeeId);
+                if (resetInstructor != null)
+                {
+                    SuccessMessage = $"Password for {resetInstructor.FirstName} {resetInstructor.LastName} has been reset to 'user123'.";
+                }
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred while resetting password: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task ResetStudentPasswordAsync()
+        {
+            SuccessMessage = string.Empty;
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+            if (string.IsNullOrWhiteSpace(ResetStudentNumber))
+            {
+                ErrorMessage = "Please enter a Student Number.";
+                return;
+            }
+            try
+            {
+                IsLoading = true;
+                var student = await _userService.ResetStudentPasswordAsync(ResetStudentNumber);
+                SuccessMessage = $"Password for {student!.FirstName} {student.LastName} has been reset to: {student.StudentNumber}";
+                ResetStudentNumber = string.Empty;
+                ErrorMessage = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally { IsLoading = false; }
+
         }
     }
 }
