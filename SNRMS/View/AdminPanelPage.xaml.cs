@@ -170,14 +170,79 @@ namespace SNRMS.View
                 AdminCurrentPwd.Password = string.Empty;
                 AdminNewPwd.Password = string.Empty;
                 AdminConfirmPwd.Password = string.Empty;
-                // SuccessMessage is already set inside ChangePasswordAsync
             }
             catch (Exception ex)
             {
                 vm.ErrorMessage = ex.Message;
             }
         }
+        private async void DeleteSection_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (AdminPanelViewModel)DataContext;
+            if (vm.SelectedSection == null) { vm.ErrorMessage = "Please select a section to delete."; return; }
+            var dialog = new ContentDialog
+            {
+                Title = "Delete Section",
+                Content = $"Are you sure you want to delete \"{vm.SelectedSection.SectionName}\"? This cannot be undone.",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                vm.DeleteSectionCommand.Execute(null);
+        }
 
+        private async void DeactivateInstructor_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (AdminPanelViewModel)DataContext;
+            if (vm.SelectedInstructor == null) { vm.ErrorMessage = "Please select an instructor to deactivate."; return; }
+            var dialog = new ContentDialog
+            {
+                Title = "Deactivate Instructor",
+                Content = $"Deactivate {vm.SelectedInstructor.FirstName} {vm.SelectedInstructor.LastName}? Their account will be disabled and they will not be able to log in.",
+                PrimaryButtonText = "Deactivate",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await vm.DeactivateUserCommand.ExecuteAsync(null);
+        }
+
+        private async void DeleteHospital_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (AdminPanelViewModel)DataContext;
+            if (vm.SelectedHospital == null) { vm.ErrorMessage = "Please select a hospital to delete."; return; }
+            var dialog = new ContentDialog
+            {
+                Title = "Delete Hospital",
+                Content = $"Are you sure you want to delete \"{vm.SelectedHospital.HospitalName}\"? All associated stations will also be removed.",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await vm.DeleteHospitalCommand.ExecuteAsync(null);
+        }
+
+        private async void RemoveStation_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (AdminPanelViewModel)DataContext;
+            if (vm.SelectedStation == null) { vm.ErrorMessage = "Please select a station to remove."; return; }
+            var dialog = new ContentDialog
+            {
+                Title = "Remove Station",
+                Content = $"Are you sure you want to remove \"{vm.SelectedStation.StationName}\"?",
+                PrimaryButtonText = "Remove",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await vm.RemoveStationCommand.ExecuteAsync(null);
+        }
         private async void ResetInstructorPassword_Clicked(object sender, RoutedEventArgs e)
         {
             var vm = (AdminPanelViewModel)DataContext;
@@ -191,7 +256,6 @@ namespace SNRMS.View
                 return;
             }
 
-            // Look up first so we can show the name in the confirmation
             SNRMS.Core.Models.Instructor? instructor;
             try
             {
@@ -244,7 +308,6 @@ namespace SNRMS.View
                 return;
             }
 
-            // Look up first so we can show the name in the confirmation
             SNRMS.Core.Models.Student? student;
             try
             {

@@ -37,139 +37,52 @@ namespace SNRMS.ViewModels
         }
 
         //SECTION ------------------
-        [ObservableProperty]
-        public partial Section? SelectedSection { get; set; }
-        [ObservableProperty]
-        public partial string SectionName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string YearLevel { get; set; } = string.Empty;
+        [ObservableProperty] public partial Section? SelectedSection { get; set; }
+        [ObservableProperty] public partial string SectionName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string YearLevel { get; set; } = string.Empty;
         //INSTRUCTOR ------------------
-        [ObservableProperty]
-        public partial Instructor? SelectedInstructor { get; set; }
-        [ObservableProperty]
-        public partial string InstructorFirstName { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string InstructorLastName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string InstructorSearchQuery { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string InstructorEmail { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string InstructorEmployeeId { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial bool ShowInactiveInstructors { get; set; }
+        [ObservableProperty] public partial Instructor? SelectedInstructor { get; set; }
+        [ObservableProperty] public partial string InstructorFirstName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InstructorLastName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InstructorSearchQuery { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InstructorEmail { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InstructorEmployeeId { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool ShowInactiveInstructors { get; set; }
 
         //EDIT INSTRUCTOR ------------------
-        [ObservableProperty]
-        public partial string EditInstructorFirstName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string EditInstructorLastName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string EditInstructorEmail { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string EditInstructorEmployeeId { get; set; } = string.Empty;
-
-        public async Task SaveInstructorEditAsync()
-        {
-            if (SelectedInstructor == null) return;
-            ErrorMessage = string.Empty;
-            SuccessMessage = string.Empty;
-            IsLoading = true;
-            try
-            {
-                await _userService.UpdateInstructorAsync(
-                    SelectedInstructor.InstructorId,
-                    EditInstructorFirstName,
-                    EditInstructorLastName,
-                    EditInstructorEmail,
-                    EditInstructorEmployeeId);
-                await LoadDataAsync();
-                SuccessMessage = "Instructor information updated successfully.";
-            }
-            finally { IsLoading = false; }
-        }
-
-        // SETTINGS: Admin change own password
-        public async Task ChangePasswordAsync(string currentPwd, string newPwd)
-        {
-            ErrorMessage = string.Empty;
-            SuccessMessage = string.Empty;
-            var user = SessionManager.CurrentUser;
-            if (user == null) throw new Exception("Session expired. Please log in again.");
-            await _userService.ChangePasswordAsync(user.UserId, currentPwd, newPwd);
-            SessionManager.CurrentUser.HasChangedPassword = true;
-            SuccessMessage = "Password changed successfully.";
-        }
-
-        // SETTINGS: Admin reset instructor password
-        public async Task<Instructor?> ResetInstructorPasswordAsync(string employeeId)
-        {
-            ErrorMessage = string.Empty;
-            SuccessMessage = string.Empty;
-            var instructor = await _userService.ResetInstructorPasswordAsync(employeeId);
-            SuccessMessage = $"Password reset to 'user123' for {instructor?.FirstName} {instructor?.LastName}.";
-            return instructor;
-        }
-
-        // SETTINGS: Admin reset student password
-        public async Task<Student?> ResetStudentPasswordAsync(string studentNumber)
-        {
-            ErrorMessage = string.Empty;
-            SuccessMessage = string.Empty;
-            var student = await _userService.ResetStudentPasswordAsync(studentNumber);
-            SuccessMessage = $"Password reset to student number for {student?.FirstName} {student?.LastName}.";
-            return student;
-        }
+        [ObservableProperty] public partial string EditInstructorFirstName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string EditInstructorLastName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string EditInstructorEmail { get; set; } = string.Empty;
+        [ObservableProperty] public partial string EditInstructorEmployeeId { get; set; } = string.Empty;
 
         //HOSPITAL ------------------
-        [ObservableProperty]
-        public partial Hospital? SelectedHospital { get; set; }
-        [ObservableProperty]
-        public partial string HospitalName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string HospitalAddress { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string HospitalSearchName { get; set; } = string.Empty;
+        [ObservableProperty] public partial Hospital? SelectedHospital { get; set; }
+        [ObservableProperty] public partial string HospitalName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string HospitalAddress { get; set; } = string.Empty;
+        [ObservableProperty] public partial string HospitalSearchName { get; set; } = string.Empty;
 
         //STATION ------------------    
-        [ObservableProperty]
-        public partial Station? SelectedStation { get; set; }
-        [ObservableProperty]
-        public partial string StationName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string StationCapacity { get; set; }
+        [ObservableProperty] public partial Station? SelectedStation { get; set; }
+        [ObservableProperty] public partial string StationName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string StationCapacity { get; set; } = string.Empty ;
 
 
         //GENERAL-------------------
-        [ObservableProperty]
-        public partial bool IsLoading { get; set; }
-        [ObservableProperty]
-        public partial string ErrorMessage { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string SuccessMessage { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string SelectedSort { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string ResetStudentNumber { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string ResetEmployeeId { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool IsLoading { get; set; }
+        [ObservableProperty] public partial string ErrorMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial string SuccessMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial string SelectedSort { get; set; } = string.Empty;
+        [ObservableProperty] public partial string ResetStudentNumber { get; set; } = string.Empty;
+        [ObservableProperty] public partial string ResetEmployeeId { get; set; } = string.Empty;
 
 
         //COLLECTIONS / LISTS -------------------
-        [ObservableProperty]
-        public partial ObservableCollection<Station> SelectedHospitalStations { get; set; } = new();
-        [ObservableProperty]
-        public partial ObservableCollection<Section> Sections { get; set; } = new ObservableCollection<Section>();
-        [ObservableProperty]
-        public partial ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
-        [ObservableProperty]
-        public partial ObservableCollection<Instructor> DisplayInstructors { get; set; } = new();
-        [ObservableProperty]
-        public partial ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
-        [ObservableProperty]
-        public partial ObservableCollection<Instructor> ActiveInstructors { get; set; } = new ObservableCollection<Instructor>();
+        [ObservableProperty] public partial ObservableCollection<Station> SelectedHospitalStations { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<Section> Sections { get; set; } = new ObservableCollection<Section>();
+        [ObservableProperty] public partial ObservableCollection<Instructor> Instructors { get; set; } = new ObservableCollection<Instructor>();
+        [ObservableProperty] public partial ObservableCollection<Instructor> DisplayInstructors { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<Hospital> Hospitals { get; set; } = new ObservableCollection<Hospital>();
+        [ObservableProperty] public partial ObservableCollection<Instructor> ActiveInstructors { get; set; } = new ObservableCollection<Instructor>();
         public List<string> YearLevelsList { get; } = new List<string> { "1", "2", "3", "4" };
         public List<string> SectionsList { get; } = new List<string>
         {
@@ -188,18 +101,11 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial int ActiveRotations { get; set; }
         [ObservableProperty] public partial int UnassignedSections { get; set; }
 
-        // Bar chart: students per section (list of label+value)
-        [ObservableProperty]
-        public partial ObservableCollection<AnalyticsBarItem> StudentsPerSection { get; set; } = new();
-
-        // Hospital breakdown — nested dropdown model
-        [ObservableProperty]
-        public partial ObservableCollection<HospitalBreakdownVm> HospitalBreakdown { get; set; } = new();
-
-        // Bar chart: rotations per hospital (flat — kept for backward compat)
-        [ObservableProperty]
-        public partial ObservableCollection<AnalyticsBarItem> RotationsPerHospital { get; set; } = new();
-
+        // Horizontal Bar chart
+        [ObservableProperty] public partial ObservableCollection<AnalyticsBarItem> StudentsPerSection { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<AnalyticsBarItem> RotationsPerHospital { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<HospitalBreakdownVm> HospitalBreakdown { get; set; } = new();
+      
         // Day slot distribution
         [ObservableProperty]
         public partial ObservableCollection<AnalyticsBarItem> RotationsByDaySlot { get; set; } = new();
@@ -208,40 +114,29 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial int SlotFriSat { get; set; }
 
         // Instructor Analytics
-        [ObservableProperty]
-        public partial Instructor? SelectedAnalyticsInstructor { get; set; }
-        [ObservableProperty]
-        public partial bool HasInstructorAnalytics { get; set; }
+        [ObservableProperty] public partial Instructor? SelectedAnalyticsInstructor { get; set; }
+        [ObservableProperty] public partial bool HasInstructorAnalytics { get; set; }
 
-        // LiveCharts2 — Graph 1: Rotations per Station
-        [ObservableProperty]
-        public partial ISeries[] RotationsPerStationSeries { get; set; } = Array.Empty<ISeries>();
-        [ObservableProperty]
-        public partial Axis[] RotationsPerStationXAxes { get; set; } = Array.Empty<Axis>();
-        [ObservableProperty]
-        public partial Axis[] RotationsPerStationYAxes { get; set; } = Array.Empty<Axis>();
+        // Bar Graph 1: Rotations per Station
+        [ObservableProperty] public partial ISeries[] RotationsPerStationSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] RotationsPerStationXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] RotationsPerStationYAxes { get; set; } = Array.Empty<Axis>();
 
-        // LiveCharts2 — Graph 2: Students per Group
-        [ObservableProperty]
-        public partial ISeries[] StudentsPerGroupSeries { get; set; } = Array.Empty<ISeries>();
-        [ObservableProperty]
-        public partial Axis[] StudentsPerGroupXAxes { get; set; } = Array.Empty<Axis>();
-        [ObservableProperty]
-        public partial Axis[] StudentsPerGroupYAxes { get; set; } = Array.Empty<Axis>();
+        // Bar Graph 2: Students per Group
+        [ObservableProperty] public partial ISeries[] StudentsPerGroupSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] StudentsPerGroupXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] StudentsPerGroupYAxes { get; set; } = Array.Empty<Axis>();
 
-        // LiveCharts2 — Graph 3: Attendance Rate per Group
-        [ObservableProperty]
-        public partial ISeries[] AttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
-        [ObservableProperty]
-        public partial Axis[] AttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
-        [ObservableProperty]
-        public partial Axis[] AttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
+        // Bar Graph 3: Attendance Rate per Group
+        [ObservableProperty] public partial ISeries[] AttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty]  public partial Axis[] AttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] AttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
+
 
 
 
         // LOAD DATA COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task LoadDataAsync()
+        [RelayCommand] public async Task LoadDataAsync()
         {
             IsLoading = true;
             SuccessMessage = string.Empty;
@@ -283,8 +178,7 @@ namespace SNRMS.ViewModels
 
 
         //SECTION COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task CreateSectionAsync()
+        [RelayCommand] public async Task CreateSectionAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -314,8 +208,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task DeleteSectionAsync()
+        [RelayCommand] public async Task DeleteSectionAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -344,8 +237,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public void SortSections()
+        [RelayCommand] public void SortSections()
         {
             if (SelectedSort == "Name")
             {
@@ -365,8 +257,7 @@ namespace SNRMS.ViewModels
         }
 
         //INSTRUCTOR COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task CreateInstructorAsync()
+        [RelayCommand] public async Task CreateInstructorAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -394,8 +285,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task AssignInstructorToSectionAsync()
+        [RelayCommand] public async Task AssignInstructorToSectionAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -429,8 +319,7 @@ namespace SNRMS.ViewModels
             }
 
         }
-        [RelayCommand]
-        public async Task UnassignInstructorAsync()
+        [RelayCommand] public async Task UnassignInstructorAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -463,8 +352,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task DeactivateUserAsync()
+        [RelayCommand] public async Task DeactivateUserAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -499,9 +387,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-
-        [RelayCommand]
-        public async Task ReactivateUserAsync()
+        [RelayCommand] public async Task ReactivateUserAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -535,8 +421,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public void SortInstructorsByLastName()
+        [RelayCommand] public void SortInstructorsByLastName()
         {
             var sorted = Instructors.OrderBy(i => i.LastName).ToList();
             Instructors.Clear();
@@ -544,9 +429,7 @@ namespace SNRMS.ViewModels
                 Instructors.Add(instructor);
             ApplyInstructorFilter();
         }
-
-        [RelayCommand]
-        public async Task SearchInstructorAsync()
+        [RelayCommand]public async Task SearchInstructorAsync()
         {
             IsLoading = true;
             SuccessMessage = string.Empty;
@@ -574,6 +457,25 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
+        public async Task SaveInstructorEditAsync()
+        {
+            if (SelectedInstructor == null) return;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            IsLoading = true;
+            try
+            {
+                await _userService.UpdateInstructorAsync(
+                    SelectedInstructor.InstructorId,
+                    EditInstructorFirstName,
+                    EditInstructorLastName,
+                    EditInstructorEmail,
+                    EditInstructorEmployeeId);
+                await LoadDataAsync();
+                SuccessMessage = "Instructor information updated successfully.";
+            }
+            finally { IsLoading = false; }
+        }
         private void ApplyInstructorFilter()
         {
             if (Instructors == null) return;
@@ -595,8 +497,7 @@ namespace SNRMS.ViewModels
         }
 
         //HOSPITAL COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task CreateHospitalAsync()
+        [RelayCommand] public async Task CreateHospitalAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -621,8 +522,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task DeleteHospitalAsync()
+        [RelayCommand]  public async Task DeleteHospitalAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -651,29 +551,14 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public void SortHospitalsByName()
+        [RelayCommand] public void SortHospitalsByName()
         {
             var sorted = Hospitals.OrderBy(h => h.HospitalName).ToList();
             Hospitals.Clear();
             foreach (var hospital in sorted)
                 Hospitals.Add(hospital);
-        }
-        partial void OnSelectedHospitalChanged(Hospital? value)
-        {
-            _ = LoadStationsForHospitalAsync(value);
-        }
-
-        private async Task LoadStationsForHospitalAsync(Hospital? hospital)
-        {
-            SelectedHospitalStations.Clear();
-            if (hospital == null) return;
-            var stations = await _hospitalService.GetStationsByHospitalIdAsync(hospital.HospitalId);
-            foreach (var station in stations)
-                SelectedHospitalStations.Add(station);
-        }
-        [RelayCommand]
-        public async Task GetHospitalsByNameAsync()
+        }    
+        [RelayCommand] public async Task GetHospitalsByNameAsync()
         {
             IsLoading = true;
             SuccessMessage = string.Empty;
@@ -700,10 +585,21 @@ namespace SNRMS.ViewModels
 
             }
         }
+        partial void OnSelectedHospitalChanged(Hospital? value)
+        {
+            _ = LoadStationsForHospitalAsync(value);
+        }
+        private async Task LoadStationsForHospitalAsync(Hospital? hospital)
+        {
+            SelectedHospitalStations.Clear();
+            if (hospital == null) return;
+            var stations = await _hospitalService.GetStationsByHospitalIdAsync(hospital.HospitalId);
+            foreach (var station in stations)
+                SelectedHospitalStations.Add(station);
+        }
 
         //STATION COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task AddStationAsync()
+        [RelayCommand] public async Task AddStationAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -739,8 +635,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-        [RelayCommand]
-        public async Task RemoveStationAsync()
+        [RelayCommand] public async Task RemoveStationAsync()
         {
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
@@ -768,16 +663,15 @@ namespace SNRMS.ViewModels
         }
 
 
-        // ── ANALYTICS LOAD COMMAND ────────────────────────────────────
-        [RelayCommand]
-        public async Task LoadAnalyticsAsync()
+        //ANALYTICS LOAD COMMAND ----------------------------------------------------------------------
+        [RelayCommand] public async Task LoadAnalyticsAsync()
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
             try
             {
                 var today = DateOnly.FromDateTime(DateTime.Today);
-                // Summary counts
+                //  total count
                 TotalStudents = await App.Database.Students.CountAsync(s => !s.IsArchived);
                 TotalInstructors = await App.Database.Instructors.Where(i => i.User != null && i.User.IsActive == true).CountAsync();
                 TotalGroups = await App.Database.Groups.CountAsync(g => !g.IsArchived);
@@ -799,7 +693,7 @@ namespace SNRMS.ViewModels
                     StudentsPerSection.Add(new AnalyticsBarItem($"{sec.SectionName} | Year: {sec.YearLevel}", count));
                 }
 
-                // Rotations per hospital — nested breakdown by Year Level, Section, Group
+                // Rotations per hospital
                 var detailedRotations = await App.Database.RotationAssignments
                     .Where(r => !r.IsArchived)
                     .Include(r => r.Station).ThenInclude(s => s.Hospital)
@@ -809,7 +703,7 @@ namespace SNRMS.ViewModels
                 HospitalBreakdown.Clear();
                 RotationsPerHospital.Clear();
 
-                // Load ALL hospitals — not just those with rotations
+                // Load ALL hospitals 
                 var allHospitals = await App.Database.Hospitals
                     .OrderBy(h => h.HospitalName)
                     .ToListAsync();
@@ -818,7 +712,6 @@ namespace SNRMS.ViewModels
 
                 foreach (var hospital in allHospitals)
                 {
-                    // Get rotations for this hospital (could be empty)
                     var hospitalRotations = detailedRotations
                         .Where(r => r.Station?.Hospital?.HospitalId == hospital.HospitalId)
                         .ToList();
@@ -863,18 +756,7 @@ namespace SNRMS.ViewModels
                         isHeader: true, maxValue: globalMax));
                 }
 
-                // Rotations by day slot
-                var allRotations = await App.Database.RotationAssignments
-                    .Where(r => !r.IsArchived).ToListAsync();
-                RotationsByDaySlot.Clear();
-                SlotMonTue = allRotations.Count(r => r.DaySlot == "Mon-Tue");
-                SlotWedThu = allRotations.Count(r => r.DaySlot == "Wed-Thu");
-                SlotFriSat = allRotations.Count(r => r.DaySlot == "Fri-Sat");
-
-                RotationsByDaySlot.Clear();
-                RotationsByDaySlot.Add(new AnalyticsBarItem("Mon-Tue", SlotMonTue));
-                RotationsByDaySlot.Add(new AnalyticsBarItem("Wed-Thu", SlotWedThu));
-                RotationsByDaySlot.Add(new AnalyticsBarItem("Fri-Sat", SlotFriSat));
+               
             }
             catch (Exception ex)
             {
@@ -885,10 +767,7 @@ namespace SNRMS.ViewModels
                 IsLoading = false;
             }
         }
-
-        //SESSION MANAGEMENT COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task LoadInstructorAnalyticsAsync()
+        [RelayCommand] public async Task LoadInstructorAnalyticsAsync()
         {
             if (SelectedAnalyticsInstructor == null) return;
             IsLoading = true;
@@ -929,7 +808,6 @@ namespace SNRMS.ViewModels
                         Name = "Rotations",
                         Values = stationValues,
                         Fill = new SolidColorPaint(new SKColor(27, 58, 107)),
-                        //CornerRadius = 4,
                         MaxBarWidth = 40
                     }
                 };
@@ -965,7 +843,6 @@ namespace SNRMS.ViewModels
                         Name = "Students",
                         Values = studentValues,
                         Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
-                        //CornerRadius = 4,
                         MaxBarWidth = 40
                     }
                 };
@@ -1010,7 +887,7 @@ namespace SNRMS.ViewModels
                     attendanceValues.Add(rate);
                 }
 
-                // Color each bar: green if >= 80, red if below
+                //  green if >= 80, red if below
                 var attendancePaints = attendanceValues
                     .Select(v => v >= 80
                         ? new SolidColorPaint(new SKColor(56, 161, 105))   // green
@@ -1024,12 +901,11 @@ namespace SNRMS.ViewModels
                         Name = label,
                         Values = new double[] { attendanceValues[i] },
                         Fill = attendancePaints[i],
-                        //CornerRadius = 4,
                         MaxBarWidth = 40
                     })
                     .ToArray();
 
-                // Add 80% threshold line
+                //    80% threshold line
                 var thresholdSeries = attendanceSeries
                     .Append(new LineSeries<double>
                     {
@@ -1069,15 +945,9 @@ namespace SNRMS.ViewModels
             finally { IsLoading = false; }
         }
 
-        [RelayCommand]
-        public void Logout()
-        {
-            SessionManager.Logout();
-        }
 
         // RESET PASSWORD COMMANDS ----------------------------------------------------------------------
-        [RelayCommand]
-        public async Task ResetInstructorPasswordAsync()
+        [RelayCommand] public async Task ResetInstructorPasswordAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -1106,8 +976,7 @@ namespace SNRMS.ViewModels
             }
         }
 
-        [RelayCommand]
-        public async Task ResetStudentPasswordAsync()
+        [RelayCommand] public async Task ResetStudentPasswordAsync()
         {
             SuccessMessage = string.Empty;
             ErrorMessage = string.Empty;
@@ -1132,6 +1001,42 @@ namespace SNRMS.ViewModels
             finally { IsLoading = false; }
 
         }
+
+        // SETTINGS --------------------------------------------------------------------------------------
+        
+        public async Task ChangePasswordAsync(string currentPwd, string newPwd)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            var user = SessionManager.CurrentUser;
+            if (user == null) throw new Exception("Session expired. Please log in again.");
+            await _userService.ChangePasswordAsync(user.UserId, currentPwd, newPwd);
+            SessionManager.CurrentUser.HasChangedPassword = true;
+            SuccessMessage = "Password changed successfully.";
+        }
+        public async Task<Instructor?> ResetInstructorPasswordAsync(string employeeId)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            var instructor = await _userService.ResetInstructorPasswordAsync(employeeId);
+            SuccessMessage = $"Password reset to 'user123' for {instructor?.FirstName} {instructor?.LastName}.";
+            return instructor;
+        }
+        public async Task<Student?> ResetStudentPasswordAsync(string studentNumber)
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+            var student = await _userService.ResetStudentPasswordAsync(studentNumber);
+            SuccessMessage = $"Password reset to student number for {student?.FirstName} {student?.LastName}.";
+            return student;
+        }
+
+        //SESSION MANAGER-----------------------------------------------------------------------------
+        [RelayCommand] public void Logout()
+        {
+            SessionManager.Logout();
+        }
+
     }
 }
 

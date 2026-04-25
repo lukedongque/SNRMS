@@ -506,7 +506,7 @@
                             </StackPanel>
 
                             <Border Background="White" CornerRadius="12" Padding="24" 
-                    BorderBrush="#E2E8F0" BorderThickness="1">
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="16">
                                     <StackPanel Orientation="Horizontal" Spacing="12">
                                         <FontIcon Glyph="&#xE72E;" Foreground="#1B3A6B" FontSize="20"/>

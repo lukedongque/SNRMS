@@ -45,7 +45,7 @@
 
                         <!-- Card 1: Change Own Password -->
                         <Border Background="White" CornerRadius="12" Padding="24"
-                BorderBrush="#E2E8F0" BorderThickness="1">
+                                BorderBrush="#E2E8F0" BorderThickness="1">
                             <StackPanel Spacing="16">
                                 <StackPanel>
                                     <TextBlock Text="Change Password" FontSize="16" FontWeight="SemiBold" Foreground="#2D3748"/>
@@ -58,38 +58,38 @@
                                     <PasswordBox x:Name="AdminConfirmPwd"  Header="Confirm New Password"  Width="320" HorizontalAlignment="Left"/>
                                 </StackPanel>
                                 <Button Content="Change Password"
-                        Click="AdminChangePassword_Clicked"
-                        Background="#1B3A6B" Foreground="White"
-                        CornerRadius="8" Padding="20,8"/>
+                                        Click="AdminChangePassword_Clicked"
+                                        Background="#1B3A6B" Foreground="White"
+                                        CornerRadius="8" Padding="20,8"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Card 2: Reset Instructor Password -->
                         <Border Background="White" CornerRadius="12" Padding="24"
-                BorderBrush="#E2E8F0" BorderThickness="1">
+                                BorderBrush="#E2E8F0" BorderThickness="1">
                             <StackPanel Spacing="16">
                                 <StackPanel>
                                     <TextBlock Text="Reset Instructor Password" FontSize="16" FontWeight="SemiBold" Foreground="#2D3748"/>
                                     <TextBlock Text="Resets the instructor's password back to the default: user123"
-                               FontSize="12" Foreground="#A0AEC0"/>
+                                                FontSize="12" Foreground="#A0AEC0"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <TextBox x:Name="ResetInstructorBox"
-                             Header="Employee ID"
-                             Text="{Binding ResetEmployeeId, Mode=TwoWay}"
-                             Width="280" PlaceholderText="e.g. EMP001"/>
+                                             Header="Employee ID"
+                                             Text="{Binding ResetEmployeeId, Mode=TwoWay}"
+                                             Width="280" PlaceholderText="e.g. EMP001"/>
                                     <Button Content="Reset Password"
-                            VerticalAlignment="Bottom"
-                            Click="ResetInstructorPassword_Clicked"
-                            Background="#ED8936" Foreground="White"
-                            CornerRadius="8" Padding="16,8"/>
+                                            VerticalAlignment="Bottom"
+                                            Click="ResetInstructorPassword_Clicked"
+                                            Background="#ED8936" Foreground="White"
+                                            CornerRadius="8" Padding="16,8"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- Card 3: Reset Student Password -->
                         <Border Background="White" CornerRadius="12" Padding="24"
-                BorderBrush="#E2E8F0" BorderThickness="1">
+                                BorderBrush="#E2E8F0" BorderThickness="1">
                             <StackPanel Spacing="16">
                                 <StackPanel>
                                     <TextBlock Text="Reset Student Password" FontSize="16" FontWeight="SemiBold" Foreground="#2D3748"/>
@@ -98,14 +98,14 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <TextBox x:Name="ResetStudentBox"
-                             Header="Student Number"
-                             Text="{Binding ResetStudentNumber, Mode=TwoWay}"
-                             Width="280" PlaceholderText="e.g. 2021-00123"/>
+                                             Header="Student Number"
+                                             Text="{Binding ResetStudentNumber, Mode=TwoWay}"
+                                             Width="280" PlaceholderText="e.g. 2021-00123"/>
                                     <Button Content="Reset Password"
-                            VerticalAlignment="Bottom"
-                            Click="ResetStudentPassword_Clicked"
-                            Background="#ED8936" Foreground="White"
-                            CornerRadius="8" Padding="16,8"/>
+                                            VerticalAlignment="Bottom"
+                                            Click="ResetStudentPassword_Clicked"
+                                            Background="#ED8936" Foreground="White"
+                                            CornerRadius="8" Padding="16,8"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -135,60 +135,60 @@
 
                             <!-- Total Students -->
                             <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20"
-      BorderBrush="#E2E8F0" BorderThickness="1">
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon Glyph="&#xE716;" FontSize="18" Foreground="#1B3A6B"/>
                                         <TextBlock Text="Total Students" FontSize="12"
-                     Foreground="#718096" VerticalAlignment="Center"/>
+                                                    Foreground="#718096" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding TotalStudents, Mode=OneWay}"
-                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
                                     <TextBlock Text="Active, non-archived" FontSize="11" Foreground="#A0AEC0"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Total Instructors -->
                             <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20"
-      BorderBrush="#E2E8F0" BorderThickness="1">
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon Glyph="&#xE77B;" FontSize="18" Foreground="#718096"/>
                                         <TextBlock Text="Instructors" FontSize="12"
-                     Foreground="#718096" VerticalAlignment="Center"/>
+                                                    Foreground="#718096" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding TotalInstructors, Mode=OneWay}"
-                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                                FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
                                     <TextBlock Text="Active Instructor Accounts" FontSize="11" Foreground="#A0AEC0"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Total Groups -->
                             <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20"
-      BorderBrush="#E2E8F0" BorderThickness="1">
+                                     BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon Glyph="&#xE902;" FontSize="18" Foreground="#38A169"/>
                                         <TextBlock Text="Groups" FontSize="12"
-                     Foreground="#718096" VerticalAlignment="Center"/>
+                                                     Foreground="#718096" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding TotalGroups, Mode=OneWay}"
-                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                                FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
                                     <TextBlock Text="Active groups" FontSize="11" Foreground="#A0AEC0"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Unassigned Sections -->
                             <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="20"
-      BorderBrush="#E2E8F0" BorderThickness="1">
+                                    BorderBrush="#E2E8F0" BorderThickness="1">
                                 <StackPanel Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon Glyph="&#xE7BA;" FontSize="18" Foreground="#E53E3E"/>
                                         <TextBlock Text="Unassigned Sections" FontSize="12"
-                     Foreground="#718096" VerticalAlignment="Center"/>
+                                                     Foreground="#718096" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding UnassignedSections, Mode=OneWay}"
-                 FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                                    FontSize="34" FontWeight="Bold" Foreground="#1B3A6B"/>
                                     <TextBlock Text="No instructor assigned" FontSize="11" Foreground="#A0AEC0"/>
                                 </StackPanel>
                             </Border>
@@ -221,17 +221,17 @@
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Grid.Column="0" Text="{Binding Label}"
-                                         FontSize="12" Foreground="#4A5568"
-                                         VerticalAlignment="Center"/>   
+                                                                 FontSize="12" Foreground="#4A5568"
+                                                                 VerticalAlignment="Center"/>   
                                                         <TextBlock Grid.Column="1" Text="{Binding Value}"
                                                                  FontSize="12" FontWeight="Bold"
                                                                  Foreground="#1B3A6B"/>
                                                     </Grid>
                                                     <ProgressBar Grid.Row="1" Value="{Binding Value}"
-                                   Maximum="50" Height="8"
-                                   Foreground="#1B3A6B"
-                                   Background="#EBF8FF"
-                                   CornerRadius="4"/>
+                                                                   Maximum="50" Height="8"
+                                                                   Foreground="#1B3A6B"
+                                                                   Background="#EBF8FF"
+                                                                   CornerRadius="4"/>
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -377,50 +377,50 @@
                                 <!-- 3 Bar graphs -->
                                 <!-- Instructor Analytics Charts -->
                                 <StackPanel Spacing="20"
-            Visibility="{Binding HasInstructorAnalytics, Mode=OneWay,
-                         Converter={StaticResource BoolToVisible}}">
+                                            Visibility="{Binding HasInstructorAnalytics, Mode=OneWay,
+                                                         Converter={StaticResource BoolToVisible}}">
 
                                     <!-- Graph 1: Rotations per Station -->
                                     <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="Rotations per Station"
-                       FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                        FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
                                             <TextBlock Text="Number of rotation assignments per clinical station"
-                       FontSize="12" Foreground="#A0AEC0"/>
+                                                        FontSize="12" Foreground="#A0AEC0"/>
                                             <lvc:CartesianChart
-                Series="{Binding RotationsPerStationSeries, Mode=OneWay}"
-                XAxes="{Binding RotationsPerStationXAxes, Mode=OneWay}"
-                YAxes="{Binding RotationsPerStationYAxes, Mode=OneWay}"
-                Height="220"
-                LegendPosition="Hidden"/>
+                                                Series="{Binding RotationsPerStationSeries, Mode=OneWay}"
+                                                XAxes="{Binding RotationsPerStationXAxes, Mode=OneWay}"
+                                                YAxes="{Binding RotationsPerStationYAxes, Mode=OneWay}"
+                                                Height="220"
+                                                LegendPosition="Hidden"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Graph 2: Students per Group -->
                                     <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="Students per Group"
-                       FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                        FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
                                             <TextBlock Text="Total students in each group under this instructor"
-                       FontSize="12" Foreground="#A0AEC0"/>
+                                                        FontSize="12" Foreground="#A0AEC0"/>
                                             <lvc:CartesianChart
-                Series="{Binding StudentsPerGroupSeries, Mode=OneWay}"
-                XAxes="{Binding StudentsPerGroupXAxes, Mode=OneWay}"
-                YAxes="{Binding StudentsPerGroupYAxes, Mode=OneWay}"
-                Height="220"
-                LegendPosition="Hidden"/>
+                                                Series="{Binding StudentsPerGroupSeries, Mode=OneWay}"
+                                                XAxes="{Binding StudentsPerGroupXAxes, Mode=OneWay}"
+                                                YAxes="{Binding StudentsPerGroupYAxes, Mode=OneWay}"
+                                                Height="220"
+                                                LegendPosition="Hidden"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Graph 3: Attendance Rate per Group -->
                                     <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
                                         <StackPanel Spacing="8">
                                             <StackPanel Orientation="Horizontal" Spacing="12">
                                                 <TextBlock Text="Attendance Rate per Group"
-                           FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                            FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
                                                 <!-- Legend -->
                                                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                     <Border Width="12" Height="12" CornerRadius="2" Background="#38A169"/>
@@ -436,13 +436,13 @@
                                                 </StackPanel>
                                             </StackPanel>
                                             <TextBlock Text="Percentage of expected clock-ins recorded per group"
-                       FontSize="12" Foreground="#A0AEC0"/>
+                                                        FontSize="12" Foreground="#A0AEC0"/>
                                             <lvc:CartesianChart
-                Series="{Binding AttendanceRateSeries, Mode=OneWay}"
-                XAxes="{Binding AttendanceRateXAxes, Mode=OneWay}"
-                YAxes="{Binding AttendanceRateYAxes, Mode=OneWay}"
-                Height="260"
-                LegendPosition="Hidden"/>
+                                                    Series="{Binding AttendanceRateSeries, Mode=OneWay}"
+                                                    XAxes="{Binding AttendanceRateXAxes, Mode=OneWay}"
+                                                    YAxes="{Binding AttendanceRateYAxes, Mode=OneWay}"
+                                                    Height="260"
+                                                    LegendPosition="Hidden"/>
                                         </StackPanel>
                                     </Border>
 
@@ -591,7 +591,7 @@
                                         Command="{Binding UnassignInstructorCommand}"
                                         Background="#718096" Foreground="White" CornerRadius="8"/>
                                 <Button Content="Delete Section" VerticalAlignment="Bottom"
-                                        Command="{Binding DeleteSectionCommand}"
+                                        Click="DeleteSection_Clicked"
                                         Background="#E53E3E" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </StackPanel>
@@ -604,7 +604,7 @@
 
                     <!-- Create Instructor Card -->
                     <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
+                            BorderBrush="#E2E8F0" BorderThickness="1">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Create New Instructor" FontWeight="SemiBold" 
                            Foreground="#2D3748" FontSize="16"/>
@@ -744,11 +744,11 @@
                             <!-- Action Buttons -->
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button Content="Deactivate" 
-                        Command="{Binding DeactivateUserCommand}"
-                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                                        Click="DeactivateInstructor_Clicked"
+                                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
                                 <Button Content="Reactivate" 
-                        Command="{Binding ReactivateUserCommand}"
-                        Background="#38A169" Foreground="White" CornerRadius="8"/>
+                                        Command="{Binding ReactivateUserCommand}"
+                                        Background="#38A169" Foreground="White" CornerRadius="8"/>
                                 <Button Content="Edit Instructor"
                                         Click="EditInstructor_Clicked"
                                         Background="#1B3A6B" Foreground="White"
@@ -767,7 +767,7 @@
 
                     <!-- Create Hospital Card -->
                     <Border Background="White" CornerRadius="12" Padding="20"
-            BorderBrush="#E2E8F0" BorderThickness="1">
+                            BorderBrush="#E2E8F0" BorderThickness="1">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Create New Hospital" FontWeight="SemiBold" 
                        Foreground="#2D3748" FontSize="16"/>
@@ -778,15 +778,15 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" Header="Hospital Name" 
-                         Text="{Binding HospitalName, Mode=TwoWay}" 
-                         PlaceholderText="Hospital Name" Margin="0,0,8,0"/>
+                                         Text="{Binding HospitalName, Mode=TwoWay}" 
+                                         PlaceholderText="Hospital Name" Margin="0,0,8,0"/>
                                 <TextBox Grid.Column="1" Header="Address" 
-                         Text="{Binding HospitalAddress, Mode=TwoWay}" 
-                         PlaceholderText="Address" Margin="0,0,8,0"/>
+                                         Text="{Binding HospitalAddress, Mode=TwoWay}" 
+                                         PlaceholderText="Address" Margin="0,0,8,0"/>
                                 <Button Grid.Column="2" Content="Create Hospital" 
-                        VerticalAlignment="Bottom"
-                        Command="{Binding CreateHospitalCommand}"
-                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
+                                        VerticalAlignment="Bottom"
+                                        Command="{Binding CreateHospitalCommand}"
+                                        Background="#1B3A6B" Foreground="White" CornerRadius="8"/>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -870,7 +870,7 @@
                                 </ListView>
 
                                 <Button Content="Delete Hospital" 
-                                        Command="{Binding DeleteHospitalCommand}"
+                                         Click="DeleteHospital_Clicked"
                                         Background="#E53E3E" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </Border>
@@ -909,9 +909,9 @@
                                         <ColumnDefinition Width="275"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Station" FontWeight="SemiBold" 
-                               Foreground="#718096" FontSize="12"/>
+                                                Foreground="#718096" FontSize="12"/>
                                     <TextBlock Grid.Column="1" Text="Capacity" FontWeight="SemiBold" 
-                               Foreground="#718096" FontSize="12"/>
+                                                Foreground="#718096" FontSize="12"/>
                                 </Grid>
                                 <Border Height="1" Background="#E2E8F0"/>
 
@@ -936,16 +936,16 @@
                                                            FontWeight="SemiBold" Foreground="#2D3748"
                                                            VerticalAlignment="Center"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding Capacity}" 
-                                           FontSize="12" Foreground="#718096"
-                                           VerticalAlignment="Center"/>
+                                                           FontSize="12" Foreground="#718096"
+                                                           VerticalAlignment="Center"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
 
                                 <Button Content="Remove Station" 
-                        Command="{Binding RemoveStationCommand}"
-                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
+                                        Click="RemoveStation_Clicked"
+                                        Background="#E53E3E" Foreground="White" CornerRadius="8"/>
                             </StackPanel>
                         </Border>
                     </Grid>

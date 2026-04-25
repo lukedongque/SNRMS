@@ -27,56 +27,36 @@ namespace SNRMS.ViewModels
         }
 
         //STUDENT -----------------------------------------------------------------------
-        [ObservableProperty]
-        public partial string StudentDisplayName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string StudentNumber { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string StudentGroupName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string StudentSectionName { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial int StudentYearLevel { get; set; }
-        [ObservableProperty]
-        public partial bool AlreadyMarkedAttendance { get; set; }
+        [ObservableProperty] public partial string StudentDisplayName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string StudentNumber { get; set; } = string.Empty;
+        [ObservableProperty] public partial string StudentGroupName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string StudentSectionName { get; set; } = string.Empty;
+        [ObservableProperty] public partial int StudentYearLevel { get; set; }
+        [ObservableProperty]  public partial bool AlreadyMarkedAttendance { get; set; }
 
-        [ObservableProperty]
-        public partial string AttendanceStatusMessage { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial bool AlreadyClockedOut { get; set; }
+        [ObservableProperty] public partial string AttendanceStatusMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool AlreadyClockedOut { get; set; }
 
-        [ObservableProperty]
-        public partial string ClockOutStatusMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial string ClockOutStatusMessage { get; set; } = string.Empty;
 
         // ROTATION ASSIGNMENT ----------------------------------------------------------
-        [ObservableProperty]
-        public partial RotationAssignment? CurrentRotation { get; set; }
-        [ObservableProperty]
-        public partial RotationAssignment? NextRotation { get; set; }
-        [ObservableProperty]
-        public partial ObservableCollection<RotationAssignment> RotationHistory { get; set; } = new();
-        [ObservableProperty]
-        public partial DateOnly Today { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        [ObservableProperty] public partial RotationAssignment? CurrentRotation { get; set; }
+        [ObservableProperty] public partial RotationAssignment? NextRotation { get; set; }
+        [ObservableProperty] public partial ObservableCollection<RotationAssignment> RotationHistory { get; set; } = new();
+        [ObservableProperty] public partial DateOnly Today { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
         // SCHEDULE ------------------------------------------------------------------
-        [ObservableProperty]
-        public partial ObservableCollection<RotationAssignment> ScheduleAssignments { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<RotationAssignment> ScheduleAssignments { get; set; } = new();
 
-        // Status flags
-        [ObservableProperty]
-        public partial bool HasCurrentRotation { get; set; }
-        [ObservableProperty]
-        public partial bool HasNextRotation { get; set; }
-        [ObservableProperty]
-        public partial bool HasSchedule { get; set; }
-        [ObservableProperty]
-        public partial string ErrorMessage { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial string SuccessMessage { get; set; } = string.Empty;
-        [ObservableProperty]
-        public partial bool IsLoading { get; set; }
+        // STATUS & MESSAGES ----------------------------------------------------------------------
+        [ObservableProperty] public partial bool HasCurrentRotation { get; set; }
+        [ObservableProperty]public partial bool HasNextRotation { get; set; }
+        [ObservableProperty]public partial bool HasSchedule { get; set; }
+        [ObservableProperty]public partial string ErrorMessage { get; set; } = string.Empty;
+        [ObservableProperty]public partial string SuccessMessage { get; set; } = string.Empty;
+        [ObservableProperty]public partial bool IsLoading { get; set; }
 
-        // Computed display strings for CurrentRotation card
+        //DISPLAY PROPERTIES FOR CURRENT ROTATION CARD ----------------------------------------------------------
         public string CurrentHospitalName => CurrentRotation?.Station?.Hospital?.HospitalName ?? "—";
         public string CurrentStationName => CurrentRotation?.Station?.StationName ?? "—";
         public string CurrentDaySlot => CurrentRotation?.DaySlot ?? "—";
@@ -86,7 +66,7 @@ namespace SNRMS.ViewModels
             ? $"{CurrentRotation.StartDate:MMM dd, yyyy}  –  {CurrentRotation.EndDate:MMM dd, yyyy}"
             : "—";
 
-        // Attendance button state
+        // ATTENDANCE LOGIC ----------------------------------------------------------
         public bool CanMarkAttendance => HasCurrentRotation && !AlreadyMarkedAttendance;
         public bool CanClockOut => HasCurrentRotation && AlreadyMarkedAttendance && !AlreadyClockedOut;
 
@@ -105,7 +85,7 @@ namespace SNRMS.ViewModels
             OnPropertyChanged(nameof(CanClockOut));
         }
 
-        // Computed display strings for NextRotation card
+        //NEXT ROTATION DISPLAY PROPERTIES ----------------------------------------------------------
         public string NextHospitalName => NextRotation?.Station?.Hospital?.HospitalName ?? "—";
         public string NextStationName => NextRotation?.Station?.StationName ?? "—";
         public string NextDaySlot => NextRotation?.DaySlot ?? "—";
@@ -115,9 +95,11 @@ namespace SNRMS.ViewModels
             ? $"{NextRotation.StartDate:MMM dd, yyyy}  –  {NextRotation.EndDate:MMM dd, yyyy}"
             : "—";
 
+        //                                                ========================================= COMMANDS =========================================
 
-        [RelayCommand]
-        public async Task LoadDataAsync()
+
+        //LOAD DATA ----------------------------------------------------------------------
+        [RelayCommand] public async Task LoadDataAsync()
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
@@ -215,14 +197,14 @@ namespace SNRMS.ViewModels
             }
         }
 
-        [RelayCommand]
-        public void Logout()
+        // SESSION MANAGEMENT ----------------------------------------------------------------------
+        [RelayCommand]  public void Logout()
         {
             SessionManager.Logout();
         }
 
-        [RelayCommand]
-        public async Task MarkAttendanceAsync()
+        // ATTENDANCE ----------------------------------------------------------------------
+        [RelayCommand] public async Task MarkAttendanceAsync()
         {
             if (CurrentRotation == null) return;
 
@@ -239,9 +221,7 @@ namespace SNRMS.ViewModels
                 AttendanceStatusMessage = ex.Message;
             }
         }
-
-        [RelayCommand]
-        public async Task ClockOutAsync()
+        [RelayCommand] public async Task ClockOutAsync()
         {
             if (CurrentRotation == null) return;
 
@@ -259,6 +239,7 @@ namespace SNRMS.ViewModels
             }
         }
 
+        // ACCOUNT MANAGEMENT ----------------------------------------------------------------------
         public async Task ChangePasswordAsync(string currentPwd, string newPwd)
         {
             ErrorMessage = string.Empty;

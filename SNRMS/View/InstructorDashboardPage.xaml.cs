@@ -162,7 +162,57 @@ namespace SNRMS.View
             };
             await dialog.ShowAsync();
         }
+        private async void DeleteGroup_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (InstructorDashboardViewModel)DataContext;
+            if (vm.SelectedGroup == null) { vm.ErrorMessage = "Please select a group to delete."; return; }
+            var dialog = new ContentDialog
+            {
+                Title = "Delete Group",
+                Content = $"Are you sure you want to delete \"{vm.SelectedGroup.GroupName}\"? Students in this group will be unassigned.",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await vm.DeleteGroupCommand.ExecuteAsync(null);
+        }
 
+        private async void DeleteStudent_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (InstructorDashboardViewModel)DataContext;
+            if (vm.SelectedStudent == null) { vm.ErrorMessage = "Please select a student to delete."; return; }
+            var dialog = new ContentDialog
+            {
+                Title = "Delete Student",
+                Content = $"Are you sure you want to remove {vm.SelectedStudent.FirstName} {vm.SelectedStudent.LastName} ({vm.SelectedStudent.StudentNumber}) from this section? Their account will be deactivated.",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await vm.DeleteStudentCommand.ExecuteAsync(null);
+        }
+
+        private async void DeleteRotation_Clicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (InstructorDashboardViewModel)DataContext;
+            if (vm.SelectedRotationAssignment == null) { vm.ErrorMessage = "Please select a rotation assignment to delete."; return; }
+            var ra = vm.SelectedRotationAssignment;
+            var dialog = new ContentDialog
+            {
+                Title = "Delete Rotation Assignment",
+                Content = $"Are you sure you want to delete the rotation for {ra.Group?.GroupName} at {ra.Station?.StationName} ({ra.DaySlot})?",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.XamlRoot
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await vm.DeleteRotationAssignmentCommand.ExecuteAsync(null);
+        }
         private async void Logout_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             var logoutDialog = new ContentDialog

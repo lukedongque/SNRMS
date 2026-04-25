@@ -6,8 +6,6 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using SNRMS.Core.Services;
 using SNRMS.ViewModels;
-using SNRMS.ViewModels;
-using System;
 using System;
 using Windows.UI.ApplicationSettings;
 
@@ -18,7 +16,6 @@ namespace SNRMS.View
         public StudentDashboardPage()
         {
             this.InitializeComponent();
-            // The DataContext is already set in XAML, so we just cast it
             if (DataContext is StudentDashboardViewModel vm)
             {
                 _ = vm.LoadDataAsync();
@@ -30,11 +27,8 @@ namespace SNRMS.View
 
         private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
-            // We handle panel visibility using the 'Tag' and manual visibility 
-            // OR you can eventually move this to the VM too. 
-            // For now, let's keep the panel switching logic here but fix the cast error:
-
-            var vm = (StudentDashboardViewModel)DataContext; // Fix: Use the correct VM class
+           
+            var vm = (StudentDashboardViewModel)DataContext; 
             vm.ErrorMessage = string.Empty;
 
             RotationPanel.Visibility = Visibility.Collapsed;
