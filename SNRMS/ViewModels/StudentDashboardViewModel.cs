@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
 using SNRMS.Core.Models;
 using SNRMS.Core.Services;
 using System;
@@ -108,6 +109,8 @@ namespace SNRMS.ViewModels
         public string NextHospitalName => NextRotation?.Station?.Hospital?.HospitalName ?? "—";
         public string NextStationName => NextRotation?.Station?.StationName ?? "—";
         public string NextDaySlot => NextRotation?.DaySlot ?? "—";
+        public string NextStartTime => NextRotation?.StartTime.ToString("hh:mm tt") ?? "—";
+        public string NextEndTime => NextRotation?.EndTime.ToString("hh:mm tt") ?? "—";
         public string NextDateRange => NextRotation != null
             ? $"{NextRotation.StartDate:MMM dd, yyyy}  –  {NextRotation.EndDate:MMM dd, yyyy}"
             : "—";

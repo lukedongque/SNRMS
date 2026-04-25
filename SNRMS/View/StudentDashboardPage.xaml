@@ -235,6 +235,7 @@
 
 
                         <!-- ── Next Rotation Card ── -->
+                        
                         <Border Background="White" CornerRadius="12" Padding="24"
                                 BorderBrush="#E2E8F0" BorderThickness="1">
                             <StackPanel Spacing="16">
@@ -263,13 +264,17 @@
                                                         Converter={StaticResource BoolToInvisible}}"
                                            Text="No upcoming rotation scheduled yet."/>
 
-                                <Grid ColumnSpacing="24" Visibility="{Binding HasNextRotation, Mode=OneWay,
+                                <Grid ColumnSpacing="24" RowSpacing="16"  Visibility="{Binding HasNextRotation, Mode=OneWay,
                                       Converter={StaticResource BoolToVisible}}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Border Grid.Column="0" Background="#F7FAFC" CornerRadius="10" Padding="16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Column="0" Grid.Row="0" Background="#F7FAFC" CornerRadius="10" Padding="16">
                                         <StackPanel Spacing="4">
                                             <TextBlock Text="HOSPITAL" FontSize="10" FontWeight="SemiBold"
                                                        Foreground="#A0AEC0" CharacterSpacing="100"/>
@@ -278,11 +283,35 @@
                                                        TextWrapping="Wrap"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Grid.Column="1" Background="#F7FAFC" CornerRadius="10" Padding="16">
+                                    <Border Grid.Column="1" Grid.Row="0" Background="#F7FAFC" CornerRadius="10" Padding="16">
                                         <StackPanel Spacing="4">
                                             <TextBlock Text="STATION" FontSize="10" FontWeight="SemiBold"
                                                        Foreground="#A0AEC0" CharacterSpacing="100"/>
                                             <TextBlock Text="{Binding NextStationName, Mode=OneWay}"
+                                                       FontSize="15" FontWeight="Bold" Foreground="#2D3748"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Row="1" Grid.Column="0"
+                                            Background="#F7FAFC" CornerRadius="10" Padding="16">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="TIME" FontSize="10" FontWeight="SemiBold"
+                                                        Foreground="#A0AEC0" CharacterSpacing="100"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="{Binding NextRotation.StartTime, Mode=OneWay}"
+                                                            FontSize="15" FontWeight="Bold" Foreground="#2D3748"/>
+                                                <TextBlock Text="—" Foreground="#A0AEC0" FontSize="15"
+                                                            VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding NextRotation.EndTime, Mode=OneWay}"
+                                                            FontSize="15" FontWeight="Bold" Foreground="#2D3748"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="1" Grid.Row="1" Background="#F7FAFC" CornerRadius="10" Padding="16">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="GROUP" FontSize="10" FontWeight="SemiBold"
+                                                        Foreground="#A0AEC0" CharacterSpacing="100"/>
+                                            <TextBlock Text="{Binding NextRotation.Group.GroupName, Mode=OneWay}"
                                                        FontSize="15" FontWeight="Bold" Foreground="#2D3748"
                                                        TextWrapping="Wrap"/>
                                         </StackPanel>
