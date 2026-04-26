@@ -14,6 +14,7 @@
             <helpers:BooleanToVisibilityConverter x:Key="BoolToVisible" />
             <helpers:InverseBoolToVisibilityConverter x:Key="BoolToInvisible" />
             <helpers:DateTimeToTimeStringConverter x:Key="TimeFormatter" />
+            <helpers:StringToVisibilityConverter x:Key="StringToVisible" />
 
         </ResourceDictionary>
     </Application.Resources>

@@ -435,12 +435,52 @@
                                                     <TextBlock Text="80% Target" FontSize="11" Foreground="#718096" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </StackPanel>
-                                            <TextBlock Text="Percentage of expected clock-ins recorded per group"
+                                            <TextBlock Text="Percentage of expected clock-ins recorded per group | (actual records) ÷ (students in group × total scheduled days) × 100"
                                                         FontSize="12" Foreground="#A0AEC0"/>
                                             <lvc:CartesianChart
                                                     Series="{Binding AttendanceRateSeries, Mode=OneWay}"
                                                     XAxes="{Binding AttendanceRateXAxes, Mode=OneWay}"
                                                     YAxes="{Binding AttendanceRateYAxes, Mode=OneWay}"
+                                                    Height="260"
+                                                    LegendPosition="Hidden"/>
+                                            <!-- Groups with no active rotation today -->
+                                            <TextBlock Text="{Binding NoRotationMessage, Mode=OneWay}"
+                                                       FontSize="12" FontStyle="Italic"
+                                                       Foreground="#ED8936"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{Binding NoRotationMessage,
+                                                                    Converter={StaticResource StringToVisible},
+                                                                    Mode=OneWay}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Graph 4: Overall Attendance Rate -->
+                                    <Border Background="White" CornerRadius="12" Padding="20"
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <StackPanel Spacing="8">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <TextBlock Text="Overall Attendance Rate per Group"
+                                                           FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                <!-- Legend -->
+                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <Border Width="12" Height="12" CornerRadius="2" Background="#38A169"/>
+                                                    <TextBlock Text="≥ 80%" FontSize="11" Foreground="#718096" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <Border Width="12" Height="12" CornerRadius="2" Background="#E53E3E"/>
+                                                    <TextBlock Text="&lt; 80%" FontSize="11" Foreground="#718096" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <Border Width="12" Height="4" CornerRadius="2" Background="#1B3A6B"/>
+                                                    <TextBlock Text="80% Target" FontSize="11" Foreground="#718096" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <TextBlock FontSize="12" Foreground="#A0AEC0"
+                                                       Text="Cumulative attendance across all rotations from start to today. Bar label shows trend vs current rotation: ▲ improving  ▼ declining  → stable"/>
+                                            <lvc:CartesianChart
+                                                    Series="{Binding OverallAttendanceRateSeries, Mode=OneWay}"
+                                                    XAxes="{Binding OverallAttendanceRateXAxes, Mode=OneWay}"
+                                                    YAxes="{Binding OverallAttendanceRateYAxes, Mode=OneWay}"
                                                     Height="260"
                                                     LegendPosition="Hidden"/>
                                         </StackPanel>

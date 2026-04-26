@@ -127,13 +127,16 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial Axis[] StudentsPerGroupXAxes { get; set; } = Array.Empty<Axis>();
         [ObservableProperty] public partial Axis[] StudentsPerGroupYAxes { get; set; } = Array.Empty<Axis>();
 
-        // Bar Graph 3: Attendance Rate per Group
+        // Bar Graph 3: Attendance Rate per Group (Current Rotation)
         [ObservableProperty] public partial ISeries[] AttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
-        [ObservableProperty]  public partial Axis[] AttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] AttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
         [ObservableProperty] public partial Axis[] AttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial string NoRotationMessage { get; set; } = string.Empty;
 
-
-
+        // Bar Graph 4: Overall Attendance Rate (All Rotations)
+        [ObservableProperty] public partial ISeries[] OverallAttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] OverallAttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] OverallAttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
 
         // LOAD DATA COMMANDS ----------------------------------------------------------------------
         [RelayCommand] public async Task LoadDataAsync()
@@ -855,26 +858,53 @@ namespace SNRMS.ViewModels
                     new Axis { Name = "Students", MinLimit = 0, TextSize = 11 }
                 };
 
-                // ── GRAPH 3: Attendance Rate per Group ───────────────────────
-                int GetDayCount(string daySlot) => daySlot switch
-                {
-                    "Mon-Tue" => 2,
-                    "Wed-Thu" => 2,
-                    "Fri-Sat" => 2,
-                    _ => 1
-                };
-
+                // GRAPH 3: Attendance Rate per Group — current rotation only
+                var today = DateOnly.FromDateTime(DateTime.Today);
                 var attendanceLabels = new List<string>();
                 var attendanceValues = new List<double>();
+                var noRotationGroups = new List<string>();
+
+                int GetScheduledDaysElapsed(RotationAssignment rotation, DateOnly currentDate)
+                {
+                    // Map DaySlot to which days of week count
+                    var scheduledDays = rotation.DaySlot switch
+                    {
+                        "Mon-Tue" => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday },
+                        "Wed-Thu" => new[] { DayOfWeek.Wednesday, DayOfWeek.Thursday },
+                        "Fri-Sat" => new[] { DayOfWeek.Friday, DayOfWeek.Saturday },
+                        _ => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday,
+                                     DayOfWeek.Wednesday, DayOfWeek.Thursday,
+                                     DayOfWeek.Friday }
+                    };
+
+                    int count = 0;
+                    var d = rotation.StartDate;
+                    while (d <= currentDate && d <= rotation.EndDate)
+                    {
+                        if (scheduledDays.Contains((DayOfWeek)((int)d.DayOfWeek)))
+                            count++;
+                        d = d.AddDays(1);
+                    }
+                    return count;
+                }
 
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
                 {
-                    var studentIds = group.Students.Select(s => s.StudentId).ToList();
-                    int totalExpected = group.RotationAssignments
-                        .Sum(r => GetDayCount(r.DaySlot)) * group.Students.Count;
+                    var currentRotation = group.RotationAssignments
+                        .FirstOrDefault(r => r.StartDate <= today && r.EndDate >= today);
+
+                    if (currentRotation == null)
+                    {
+                        noRotationGroups.Add(group.GroupName);
+                        continue;
+                    }
+
+                    int scheduledDaysElapsed = GetScheduledDaysElapsed(currentRotation, today);
+                    int totalExpected = group.Students.Count * scheduledDaysElapsed;
 
                     int totalAttended = await App.Database.AttendanceRecords
-                        .Where(a => studentIds.Contains(a.StudentId))
+                        .Where(a => a.RotationAssignmentId == currentRotation.RotationAssignmentId
+                                 && a.DateToday <= today)
                         .Select(a => new { a.StudentId, a.DateToday })
                         .Distinct()
                         .CountAsync();
@@ -887,52 +917,160 @@ namespace SNRMS.ViewModels
                     attendanceValues.Add(rate);
                 }
 
-                //  green if >= 80, red if below
                 var attendancePaints = attendanceValues
                     .Select(v => v >= 80
-                        ? new SolidColorPaint(new SKColor(56, 161, 105))   // green
-                        : new SolidColorPaint(new SKColor(229, 62, 62)))    // red
+                        ? new SolidColorPaint(new SKColor(56, 161, 105))
+                        : new SolidColorPaint(new SKColor(229, 62, 62)))
                     .ToArray();
 
-                // Build one ColumnSeries per group so each can have its own color
-                var attendanceSeries = attendanceLabels
-                    .Select((label, i) => (ISeries)new ColumnSeries<double>
+                // Use two series: one green (≥80) one red (<80), null placeholders for gaps
+                var greenValues = attendanceValues.Select((v, i) => v >= 80 ? v : (double?)null).ToArray();
+                var redValues   = attendanceValues.Select((v, i) => v < 80  ? v : (double?)null).ToArray();
+
+                var attendanceSeries = new ISeries[]
+                {
+                    new ColumnSeries<double?>
                     {
-                        Name = label,
-                        Values = new double[] { attendanceValues[i] },
-                        Fill = attendancePaints[i],
-                        MaxBarWidth = 40
-                    })
-                    .ToArray();
-
-                //    80% threshold line
-                var thresholdSeries = attendanceSeries
-                    .Append(new LineSeries<double>
+                        Name = "≥ 80%",
+                        Values = greenValues,
+                        Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
+                        MaxBarWidth = 40,
+                        IgnoresBarPosition = false
+                    },
+                    new ColumnSeries<double?>
+                    {
+                        Name = "< 80%",
+                        Values = redValues,
+                        Fill = new SolidColorPaint(new SKColor(229, 62, 62)),
+                        MaxBarWidth = 40,
+                        IgnoresBarPosition = false
+                    },
+                    new LineSeries<double?>
                     {
                         Name = "80% Threshold",
-                        Values = Enumerable.Repeat(80.0, attendanceLabels.Count).ToArray(),
-                        Stroke = new SolidColorPaint(new SKColor(27, 58, 107)) { StrokeThickness = 2 },
+                        Values = attendanceLabels.Select(_ => (double?)80.0).ToArray(),
+                        Stroke = new SolidColorPaint(new SKColor(237, 137, 54)) { StrokeThickness = 2 },
                         Fill = null,
                         GeometrySize = 0,
                         LineSmoothness = 0
-                    })
-                    .ToArray();
+                    }
+                };
 
-                AttendanceRateSeries = thresholdSeries;
+                AttendanceRateSeries = attendanceSeries;
                 AttendanceRateXAxes = new Axis[]
                 {
-                     new Axis { Labels = attendanceLabels.ToArray(), TextSize = 11 }
+                    new Axis { Labels = attendanceLabels.ToArray(), TextSize = 11 }
                 };
                 AttendanceRateYAxes = new Axis[]
                 {
+                    new Axis { Name = "Attendance %", MinLimit = 0, MaxLimit = 100, TextSize = 11 }
+                };
+
+                // Show message for groups with no active rotation
+                NoRotationMessage = noRotationGroups.Count > 0
+                    ? $"No active rotation today: {string.Join(", ", noRotationGroups)}"
+                    : string.Empty;
+
+                // ── GRAPH 4: Overall Attendance Rate (all rotations to date) ─────────
+                var overallLabels = new List<string>();
+                var overallValues = new List<double>();
+                var overallTrends = new List<string>(); // ▲ ▼ →
+
+                foreach (var group in activeGroups.OrderBy(g => g.GroupName))
+                {
+                    var pastAndCurrentRotations = group.RotationAssignments
+                        .Where(r => r.StartDate <= today)
+                        .ToList();
+
+                    if (!pastAndCurrentRotations.Any())
+                    {
+                        overallLabels.Add(group.GroupName);
+                        overallValues.Add(0);
+                        overallTrends.Add("→");
+                        continue;
+                    }
+
+                    // Total scheduled days across ALL rotations up to today
+                    int totalScheduledDays = pastAndCurrentRotations
+                        .Sum(r => GetScheduledDaysElapsed(r, today < r.EndDate ? today : r.EndDate));
+
+                    int totalExpectedOverall = group.Students.Count * totalScheduledDays;
+
+                    var rotationIds = pastAndCurrentRotations
+                        .Select(r => r.RotationAssignmentId)
+                        .ToList();
+
+                    int totalAttendedOverall = await App.Database.AttendanceRecords
+                        .Where(a => rotationIds.Contains(a.RotationAssignmentId) && a.DateToday <= today)
+                        .Select(a => new { a.StudentId, a.DateToday })
+                        .Distinct()
+                        .CountAsync();
+
+                    double overallRate = totalExpectedOverall > 0
+                        ? Math.Round((totalAttendedOverall / (double)totalExpectedOverall) * 100, 1)
+                        : 0;
+
+                    overallLabels.Add(group.GroupName);
+                    overallValues.Add(overallRate);
+
+                    // Trend arrow: compare current rotation rate vs overall rate
+                    double currentRate = attendanceValues.Count > overallLabels.Count - 1
+                        ? attendanceValues.ElementAtOrDefault(
+                            attendanceLabels.IndexOf(group.GroupName))
+                        : -1;
+
+                    string trend = currentRate < 0 ? "→"
+                        : currentRate > overallRate + 2 ? "▲"
+                        : currentRate < overallRate - 2 ? "▼"
+                        : "→";
+
+                    overallTrends.Add(trend);
+                }
+
+                var overallGreenValues = overallValues.Select(v => v >= 80 ? v : (double?)null).ToArray();
+                var overallRedValues   = overallValues.Select(v => v < 80  ? v : (double?)null).ToArray();
+
+                var overallSeries = new ISeries[]
+                {
+                    new ColumnSeries<double?>
+                    {
+                        Name = "≥ 80%",
+                        Values = overallGreenValues,
+                        Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
+                        MaxBarWidth = 40,
+                        IgnoresBarPosition = false
+                    },
+                    new ColumnSeries<double?>
+                    {
+                        Name = "< 80%",
+                        Values = overallRedValues,
+                        Fill = new SolidColorPaint(new SKColor(229, 62, 62)),
+                        MaxBarWidth = 40,
+                        IgnoresBarPosition = false
+                    },
+                    new LineSeries<double?>
+                    {
+                        Name = "80% Threshold",
+                        Values = overallLabels.Select(_ => (double?)80.0).ToArray(),
+                        Stroke = new SolidColorPaint(new SKColor(237, 137, 54)) { StrokeThickness = 2 },
+                        Fill = null,
+                        GeometrySize = 0,
+                        LineSmoothness = 0
+                    }
+                };
+
+                OverallAttendanceRateSeries = overallSeries;
+                OverallAttendanceRateXAxes = new Axis[]
+                {
                     new Axis
                     {
-                        Name = "Attendance %",
-                        MinLimit = 0,
-                        MaxLimit = 100,
+                        Labels = overallLabels.Select((l, i) => $"{l} {overallTrends[i]}").ToArray(),
                         TextSize = 11
-
                     }
+                };
+                OverallAttendanceRateYAxes = new Axis[]
+                {
+                    new Axis { Name = "Attendance %", MinLimit = 0, MaxLimit = 100, TextSize = 11 }
                 };
 
                 HasInstructorAnalytics = true;

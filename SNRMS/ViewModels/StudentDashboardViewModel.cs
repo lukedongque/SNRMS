@@ -136,9 +136,7 @@ namespace SNRMS.ViewModels
                 OnPropertyChanged(nameof(CurrentEndTime));
                 OnPropertyChanged(nameof(CurrentDateRange));
 
-                // Load next rotation (safe)
                 NextRotation = await _rotationService.GetNextRotationAssignment(studentId);
-                // Skip if it's the same as current
                 if (NextRotation != null && CurrentRotation != null &&
                     NextRotation.RotationAssignmentId == CurrentRotation.RotationAssignmentId)
                     NextRotation = null;
@@ -148,43 +146,30 @@ namespace SNRMS.ViewModels
                 OnPropertyChanged(nameof(NextDaySlot));
                 OnPropertyChanged(nameof(NextDateRange));
 
-                // Load rotation history
-                try
+                var history = await _rotationService.GetStudentRotationHistoryAsync(studentId);
+                RotationHistory = new ObservableCollection<RotationAssignment>(history);
+
+                var allAssignments = await _rotationService.GetStudentAllAssignmentsAsync(studentId);
+                ScheduleAssignments = new ObservableCollection<RotationAssignment>(
+                    allAssignments
+                        .Where(r => r.EndDate >= Today)
+                        .OrderBy(r => r.StartDate)
+                        .ToList());
+                HasSchedule = ScheduleAssignments.Count > 0;
+
+                if (CurrentRotation != null)
                 {
-                    var history = await _rotationService.GetStudentRotationHistoryAsync(studentId);
-                    RotationHistory = new ObservableCollection<RotationAssignment>(history);
+                    AlreadyMarkedAttendance = await _attendanceService.HasAttendanceTodayAsync(
+                        SessionManager.CurrentUser!.StudentId!.Value,
+                        CurrentRotation.RotationAssignmentId);
+                    AlreadyClockedOut = await _attendanceService.HasClockedOutTodayAsync(
+                        SessionManager.CurrentUser!.StudentId!.Value,
+                        CurrentRotation.RotationAssignmentId);
 
-                    var allAssignments = await _rotationService.GetStudentAllAssignmentsAsync(studentId); 
-                    ScheduleAssignments = new ObservableCollection<RotationAssignment>(
-                        allAssignments
-                            .Where(r => r.EndDate >= Today)
-                            .OrderBy(r => r.StartDate)
-                            .ToList());
-                    HasSchedule = ScheduleAssignments.Count > 0;
-
-                    if (CurrentRotation != null)
-                    {
-                        AlreadyMarkedAttendance = await _attendanceService.HasAttendanceTodayAsync(
-                            SessionManager.CurrentUser!.StudentId!.Value,
-                            CurrentRotation.RotationAssignmentId);
-                        AlreadyClockedOut = await _attendanceService.HasClockedOutTodayAsync(
-                            SessionManager.CurrentUser!.StudentId!.Value,
-                            CurrentRotation.RotationAssignmentId);
-
-                        if (AlreadyMarkedAttendance)
-                            AttendanceStatusMessage = "Attendance already marked for today.";
-                        if (AlreadyClockedOut)
-                            ClockOutStatusMessage = "Already clocked out for today.";
-
-                        if (AlreadyMarkedAttendance)
-                            AttendanceStatusMessage = "Attendance already marked for today.";
-                    }
-                }
-                catch
-                {
-                    RotationHistory.Clear();
-                    ScheduleAssignments.Clear();
-                    HasSchedule = false;
+                    if (AlreadyMarkedAttendance)
+                        AttendanceStatusMessage = "Attendance already marked for today.";
+                    if (AlreadyClockedOut)
+                        ClockOutStatusMessage = "Already clocked out for today.";
                 }
             }
             catch (Exception ex)
