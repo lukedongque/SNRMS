@@ -112,6 +112,7 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial string ErrorMessage { get; set; } = string.Empty;
         [ObservableProperty] public partial string SuccessMessage { get; set; } = string.Empty;
         [ObservableProperty] public partial string InstructorDisplayName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InstructorSection { get; set; } = string.Empty;
         [ObservableProperty] public partial string InstructorEmail { get; set; } = string.Empty;
 
         [ObservableProperty] public partial string InstructorEmployeeId { get; set; } = string.Empty;
@@ -136,9 +137,12 @@ namespace SNRMS.ViewModels
             {
                 if (user.Instructor != null)
                 {
+
                     InstructorDisplayName = $"{user.Instructor.FirstName} {user.Instructor.LastName}";
                     InstructorEmployeeId = $"ID: {user.Instructor.EmployeeId}";
                     InstructorEmail = $"{user.Instructor.Email}";
+                    
+
                 }
                 else
                 {
@@ -162,6 +166,7 @@ namespace SNRMS.ViewModels
                 try
                 {
                     section = await _sectionService.GetInstructorSectionAsync(instructorId);
+                    InstructorSection = $"{section.SectionName} (Year {section.YearLevel})";
                 }
                 catch
                 {
@@ -180,8 +185,7 @@ namespace SNRMS.ViewModels
                 if (_isGroupsSorted)
                     SortGroupsByName();
 
-                // Load all students
-                var students = await _studentService.GetAllStudentsAsync();
+                var students = await _studentService.GetStudentsBySectionAsync(section.SectionId);
                 Students.Clear();
                 foreach (var student in students)
                     Students.Add(student);
@@ -454,21 +458,34 @@ namespace SNRMS.ViewModels
 
                 if (existingStudent != null)
                 {
-                    // Scenario A: Student is Active
-                    if (!existingStudent.IsArchived)
+                    // Scenario A: Student is Active AND already belongs to a section
+                    if (!existingStudent.IsArchived && existingStudent.SectionId != null)
                     {
+                        // If they already belong to THIS instructor's section, just show them
+                        if (existingStudent.SectionId == section.SectionId)
+                        {
+                            if (!Students.Any(s => s.StudentId == existingStudent.StudentId))
+                                Students.Add(existingStudent);
+                            ErrorMessage = $"Student {existingStudent.FirstName} {existingStudent.LastName} is already in your section.";
+                            return;
+                        }
+                        // Belongs to a different section — block
                         ErrorMessage = "Error: Student belongs to another section and is currently active.";
                         return;
                     }
 
-                    // Scenario B: Student is Archived - Reactivate them
-                    await _studentService.ReactivateStudentAsync(existingStudent.StudentId);
-                    SuccessMessage = $"Student {existingStudent.FirstName} has been un-archived. You can now assign them to a group.";
+                    // Scenario B: Student is Archived OR active with no section — Reactivate
+                    var reactivated = await _studentService.ReactivateStudentAsync(existingStudent.StudentId, section.SectionId);
+                    if (!Students.Any(s => s.StudentId == reactivated.StudentId))
+                        Students.Add(reactivated);
+                    SuccessMessage = $"Student {reactivated.FirstName} {reactivated.LastName} has been re-enrolled. Assign them to a group.";
                     ClearAutofill();
+                    IsLoading = false;
+                    return;
                 }
                 else
                 {
-                    var student = await _studentService.CreateStudentAsync(StudentFirstName, StudentLastName, StudentEmail, StudentNumber);
+                    var student = await _studentService.CreateStudentAsync(StudentFirstName, StudentLastName, StudentEmail, StudentNumber, section.SectionId);
                     if (student != null)
                     {
                         Students.Add(student);
@@ -489,26 +506,7 @@ namespace SNRMS.ViewModels
             }
             finally { IsLoading = false; }
         }
-        [RelayCommand] public async Task BulkCreateStudent()
-        {
-            ErrorMessage = string.Empty;
-            SuccessMessage = string.Empty;
-            IsLoading = true;
-            try
-            {
-                var bulkstudents = await _studentService.CreateBulkAccountStudentAsync(StudentsToCreate.ToList());
-                foreach (var student in bulkstudents)
-                {
-                    Students.Add(student);
-                }
-                SuccessMessage = $"{bulkstudents.Count} students created successfully.";
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred while bulk creating students: {ex.Message}";
-            }
-            finally { IsLoading = false; }
-        }
+        
         [RelayCommand] public async Task DeleteStudentAsync()
         {
             IsLoading = true;
@@ -577,9 +575,11 @@ namespace SNRMS.ViewModels
             ErrorMessage = string.Empty;
             try
             {
+                var instructorId = SessionManager.CurrentUser!.InstructorId!.Value;
+                var section = await _sectionService.GetInstructorSectionAsync(instructorId);
                 var students = await _studentService.SearchStudentsAsync(StudentSearchQuery);
                 Students.Clear();
-                foreach (var student in students)
+                foreach (var student in students.Where(s => s.Group == null || s.Group.SectionId == section.SectionId))
                     Students.Add(student);
             }
             catch (Exception ex)

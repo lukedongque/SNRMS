@@ -31,17 +31,25 @@
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="{Binding InstructorDisplayName, Mode=OneWay}" 
-                       FontWeight="Bold" 
-                       FontSize="14" 
-                       Foreground="#1B3A6B" 
-                       TextTrimming="CharacterEllipsis" 
-                       TextWrapping="NoWrap"/>
+                                   FontWeight="Bold" 
+                                   FontSize="14" 
+                                   Foreground="#1B3A6B" 
+                                   TextTrimming="CharacterEllipsis" 
+                                   TextWrapping="NoWrap"/>
 
                         <TextBlock Text="{Binding InstructorEmployeeId, Mode=OneWay}" 
-                       FontSize="11" 
-                       Foreground="#718096"
-                       TextTrimming="CharacterEllipsis"
-                       TextWrapping="NoWrap"/>
+                                   FontSize="11" 
+                                   Foreground="#718096"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap"/>
+                        
+                        <TextBlock Text="{Binding InstructorSection, Mode=OneWay}" 
+                                    FontSize="11" 
+                                    Foreground="#718096"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap"/>
+
+
                     </StackPanel>
                 </Grid>
             </NavigationView.PaneFooter>

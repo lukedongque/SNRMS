@@ -12,6 +12,9 @@ namespace SNRMS.Core.Models
         public string Email { get; set; } = string.Empty;
         public string StudentNumber { get; set; } = string.Empty;
 
+
+        public int? SectionId { get; set; }
+        public Section? Section { get; set; }
         public int? GroupId { get; set; }
         public Group? Group { get; set; }
         public ICollection<StudentRotationHistory> RotationHistory { get; set; } = new List<StudentRotationHistory>();

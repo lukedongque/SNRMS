@@ -73,7 +73,6 @@ namespace SNRMS.Core.Services
             return user;
         }
 
-        // ── CHANGE PASSWORD (requires current password verification) ──────────────
         public async Task<User?> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
         {
             if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
@@ -89,7 +88,6 @@ namespace SNRMS.Core.Services
             return user;
         }
 
-        // ── ADMIN RESET: INSTRUCTOR password → "user123" ──────────────────────────
         public async Task<Instructor?> ResetInstructorPasswordAsync(string employeeId)
         {
             if (string.IsNullOrEmpty(employeeId))
@@ -106,7 +104,6 @@ namespace SNRMS.Core.Services
             return instructor;
         }
 
-        // ── ADMIN RESET: STUDENT password → [studentnumber] ──────────────────────
         public async Task<Student?> ResetStudentPasswordAsync(string studentNumber)
         {
             if (string.IsNullOrEmpty(studentNumber))

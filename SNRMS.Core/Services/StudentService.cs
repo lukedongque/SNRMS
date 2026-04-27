@@ -14,7 +14,7 @@ namespace SNRMS.Core.Services
         {
             _dbContext = dbContext;
         }
-        public async Task<Student?> CreateStudentAsync(string firstname, string lastname, string email, string studentnumber) //create single student
+        public async Task<Student?> CreateStudentAsync(string firstname, string lastname, string email, string studentnumber, int sectionId = 0) 
         {
             if (string.IsNullOrEmpty(firstname) ||
                 string.IsNullOrEmpty(lastname) ||
@@ -29,7 +29,8 @@ namespace SNRMS.Core.Services
                 FirstName = firstname,
                 LastName = lastname,
                 Email = email,
-                StudentNumber = studentnumber
+                StudentNumber = studentnumber,
+                SectionId = sectionId > 0 ? sectionId : null
             };
 
             var user = new User
@@ -44,7 +45,7 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return student;
         }
-        public async Task<Student?> DeleteStudentAsync(int studentId) //delete student by id
+        public async Task<Student?> DeleteStudentAsync(int studentId) 
         {
             var student = await _dbContext.Students.Include(s => s.Group!).ThenInclude(g => g.RotationAssignments).FirstOrDefaultAsync(s => s.StudentId == studentId);
             if (student == null)
@@ -56,30 +57,24 @@ namespace SNRMS.Core.Services
                 throw new InvalidOperationException("Cannot delete student with existing rotation assignments.");
             student.IsArchived = true;
             student.GroupId = null;
+            student.SectionId = null;
             if (user != null)
-                user.IsActive = false;  // deactivate user account
+                user.IsActive = false;  
             await _dbContext.SaveChangesAsync();
             return student;
         }
-        public async Task<Student> ReactivateStudentAsync(int studentId)
+        public async Task<Student> ReactivateStudentAsync(int studentId, int sectionId)
         {
             var student = await _dbContext.Students.FindAsync(studentId);
             if (student == null) throw new InvalidOperationException("Student not found.");
-
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.StudentId == studentId);
-
             student.IsArchived = false;
-            student.GroupId = null; // Ensure they start without a group as requested
-
-            if (user != null)
-            {
-                user.IsActive = true; // Give them access back
-            }
-
+            student.GroupId = null;
+            student.SectionId = sectionId;
+            if (user != null) user.IsActive = true;
             await _dbContext.SaveChangesAsync();
             return student;
         }
-
         public async Task<List<Student>> GetStudentsByGroupAsync(int groupId) //get students in a group
         {
             var group = await _dbContext.Groups.FindAsync(groupId);
@@ -89,6 +84,16 @@ namespace SNRMS.Core.Services
                     .Include(s => s.Group) 
                     .AsNoTracking()
                     .Where(s => s.GroupId == groupId && !s.IsArchived)
+                    .ToListAsync();
+        }
+
+        public async Task<List<Student>> GetStudentsBySectionAsync(int sectionId)
+        {
+            return await _dbContext.Students
+                    .Include(s => s.Group).ThenInclude(g => g.Section)
+                    .AsNoTracking()
+                    .Where(s => !s.IsArchived && s.SectionId == sectionId)
+                    .OrderBy(s => s.LastName)
                     .ToListAsync();
         }
 
@@ -125,8 +130,7 @@ namespace SNRMS.Core.Services
             if (newGroup == null) throw new InvalidOperationException("New group not found.");
             if (student.GroupId == newGroupId) throw new InvalidOperationException("Student is already in this group.");
 
-            // 1. Remove future StudentRotationHistory entries from the OLD group
-            //    (keep past/completed ones so rotation history is preserved)
+         
             if (student.GroupId != null)
             {
                 var oldGroupRotationIds = await _dbContext.RotationAssignments
@@ -142,10 +146,8 @@ namespace SNRMS.Core.Services
                 _dbContext.StudentRotationHistories.RemoveRange(staleHistories);
             }
 
-            // 2. Assign student to new group
             student.GroupId = newGroupId;
 
-            // 3. Catch-up: add history entries for new group's current + future rotations
             var upcomingRotations = newGroup.RotationAssignments
                 .Where(ra => !ra.IsArchived && ra.EndDate >= today)
                 .ToList();
@@ -169,34 +171,8 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return student;
         }
-        public async Task<List<Student>> CreateBulkAccountStudentAsync(List<Student> student)// create bulk student accounts
-        {
-            foreach (var s in student)
-            {
-                if (string.IsNullOrEmpty(s.FirstName) ||
-                    string.IsNullOrEmpty(s.LastName) ||
-                    string.IsNullOrEmpty(s.Email) ||
-                    string.IsNullOrEmpty(s.StudentNumber))
-                    throw new ArgumentException("All fields are required for student.");
-            }
 
-
-            var createdStudents = new List<Student>();
-            foreach (var s in student)
-            {
-                var newstudent = await CreateStudentAsync(
-                    s.FirstName,
-                    s.LastName,
-                    s.Email,
-                    s.StudentNumber);
-                if (newstudent != null)
-                    createdStudents.Add(newstudent);
-
-            }
-            return createdStudents;
-        }
-
-        public async Task<List<Student>> GetAllStudentsAsync() //get all students
+        public async Task<List<Student>> GetAllStudentsAsync() 
         {
             return await _dbContext.Students.AsNoTracking().Include(s => s.Group).Where(s => !s.IsArchived).ToListAsync();
         }
@@ -230,7 +206,6 @@ namespace SNRMS.Core.Services
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.StudentId == studentId);
 
-            // Capture old student number BEFORE updating — needed for password check
             var oldStudentNumber = student.StudentNumber;
 
             student.FirstName = firstName;
@@ -245,7 +220,6 @@ namespace SNRMS.Core.Services
                 // Only update password if the student never changed it from the default
                 if (!user.HasChangedPassword)
                     user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(studentNumber);
-                // else: student set a custom password — leave it untouched
             }
 
             await _dbContext.SaveChangesAsync();

@@ -102,33 +102,6 @@ namespace SNRMS.Core.Services
             await _dbContext.SaveChangesAsync();
             return section;
         }
-        public async Task<List<Section>> ImportSectionsFromExcelAsync(string filePath)
-        {
-            var createdSections = new List<Section>();
-            var workbook = new XLWorkbook(filePath);
-            var worksheet = workbook.Worksheet(1);
-            var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // skip header
-
-            foreach (var row in rows)
-            {
-                var sectionName = row.Cell(1).GetString().Trim();
-                var yearLevelStr = row.Cell(2).GetString().Trim();
-
-                if (string.IsNullOrEmpty(sectionName) || !int.TryParse(yearLevelStr, out int yearLevel))
-                    continue; // skip invalid rows
-
-                try
-                {
-                    var section = await CreateSectionAsync(sectionName, yearLevel);
-                    if (section != null)
-                        createdSections.Add(section);
-                }
-                catch
-                {
-                    continue; // skip duplicates
-                }
-            }
-            return createdSections;
-        }
+      
     }
 }

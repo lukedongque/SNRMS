@@ -127,7 +127,7 @@ namespace SNRMS.Core.Services
                 .Include(h => h.RotationAssignment)
                     .ThenInclude(r => r.Group)
                 .Select(h => h.RotationAssignment)
-                .Where(r => r.GroupId == student.GroupId) // removed IsArchived filter — full schedule includes deleted past rotations
+                .Where(r => r.GroupId == student.GroupId) 
                 .OrderBy(r => r.StartDate)
                 .ToListAsync();
         }
@@ -143,7 +143,7 @@ namespace SNRMS.Core.Services
                 .Include(h => h.RotationAssignment)
                     .ThenInclude(r => r.Group)
                 .Select(h => h.RotationAssignment)
-                .Where(r => r.EndDate < today)   // removed IsArchived filter — deleted past rotations still appear in history
+                .Where(r => r.EndDate < today)   
                 .OrderByDescending(r => r.EndDate)
                 .ToListAsync();
 
