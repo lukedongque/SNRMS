@@ -950,6 +950,7 @@ namespace SNRMS.ViewModels
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
                 {
                     // Include any rotation that has started (past or active) — not just today's
+                    var relevantRotation = group.RotationAssignments
                         .Where(r => r.StartDate <= today)
                         .OrderByDescending(r => r.StartDate)
                         .FirstOrDefault();
@@ -961,6 +962,7 @@ namespace SNRMS.ViewModels
                     }
 
                     int scheduledDaysElapsed = GetScheduledDaysElapsed(relevantRotation, today);
+                    // Always count at least 1 expected day so a clock-in always registers
                     int totalExpected = group.Students.Count * Math.Max(scheduledDaysElapsed, 1);
 
                     int totalAttended = await App.Database.AttendanceRecords
@@ -1040,7 +1042,7 @@ namespace SNRMS.ViewModels
                     : DateOnly.MinValue;
                 var overallRangeEnd = today;
                 OverallAttendanceScopeDescription = SelectedOverallAttendanceRange == "This Month"
-                    ? $"Month-to-date attendance, {overallRangeEnd:MMMM yyyy}"
+                    ? $"Attendance from {overallRangeStart:MMM d} to {overallRangeEnd:MMM d, yyyy}"
                     : "Cumulative attendance across all started rotations";
 
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
