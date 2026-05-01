@@ -116,6 +116,12 @@ namespace SNRMS.ViewModels
         // Instructor Analytics
         [ObservableProperty] public partial Instructor? SelectedAnalyticsInstructor { get; set; }
         [ObservableProperty] public partial bool HasInstructorAnalytics { get; set; }
+        [ObservableProperty] public partial string InstructorAnalyticsName { get; set; } = "No instructor selected";
+        [ObservableProperty] public partial string InstructorAnalyticsSection { get; set; } = "Choose an instructor to load section metrics.";
+        [ObservableProperty] public partial int InstructorAnalyticsStudents { get; set; }
+        [ObservableProperty] public partial int InstructorAnalyticsGroups { get; set; }
+        [ObservableProperty] public partial int InstructorAnalyticsRotations { get; set; }
+        [ObservableProperty] public partial string InstructorAnalyticsAttendanceRate { get; set; } = "0%";
 
         // Bar Graph 1: Rotations per Station
         [ObservableProperty] public partial ISeries[] RotationsPerStationSeries { get; set; } = Array.Empty<ISeries>();
@@ -789,21 +795,42 @@ namespace SNRMS.ViewModels
                 {
                     ErrorMessage = "This instructor has no assigned section.";
                     HasInstructorAnalytics = false;
+                    ClearInstructorAnalyticsSummary();
                     return;
                 }
 
                 var activeGroups = section.Groups.Where(g => !g.IsArchived).ToList();
+                InstructorAnalyticsName = $"{SelectedAnalyticsInstructor.FirstName} {SelectedAnalyticsInstructor.LastName}".Trim();
+                InstructorAnalyticsSection = $"{section.SectionName} | Year {section.YearLevel}";
+                InstructorAnalyticsGroups = activeGroups.Count;
+                InstructorAnalyticsStudents = activeGroups.Sum(g => g.Students.Count);
+                InstructorAnalyticsRotations = activeGroups.Sum(g => g.RotationAssignments.Count);
 
                 // ── GRAPH 1: Rotations per Station ────────────────────────────
                 var rotationsByStation = activeGroups
                     .SelectMany(g => g.RotationAssignments)
-                    .GroupBy(r => r.Station?.StationName ?? "Unknown")
+                    .GroupBy(r => new {
+                        Station  = r.Station?.StationName ?? "Unknown",
+                        Hospital = r.Station?.Hospital?.HospitalName ?? ""
+                    })
                     .OrderByDescending(g => g.Count())
                     .ToList();
 
-                var stationLabels = rotationsByStation.Select(g => g.Key).ToArray();
+                // Label = "StationName\nHospitalName" so hospital shows below station
+                var stationLabels = rotationsByStation
+                    .Select(g => {
+                        if (string.IsNullOrEmpty(g.Key.Hospital)) return g.Key.Station;
+                        // Abbreviate hospital name: take first letter of each word
+                        var abbrev = string.Concat(g.Key.Hospital
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(w => w[0]))
+                            .ToUpper();
+                        return $"{g.Key.Station} ({abbrev})";
+                    })
+                    .ToArray();
                 var stationValues = rotationsByStation.Select(g => (double)g.Count()).ToArray();
 
+                // One series with abbreviated station labels on the X axis.
                 RotationsPerStationSeries = new ISeries[]
                 {
                     new ColumnSeries<double>
@@ -819,8 +846,10 @@ namespace SNRMS.ViewModels
                     new Axis
                     {
                         Labels = stationLabels,
-                        LabelsRotation = -15,
-                        TextSize = 11,
+                        LabelsRotation = -25,
+                        TextSize = 10,
+                        MinStep = 1,
+                        ForceStepToMin = true
                     }
                 };
                 RotationsPerStationYAxes = new Axis[]
@@ -890,21 +919,24 @@ namespace SNRMS.ViewModels
 
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
                 {
-                    var currentRotation = group.RotationAssignments
-                        .FirstOrDefault(r => r.StartDate <= today && r.EndDate >= today);
+                    // Include any rotation that has started (past or active) — not just today's
+                    var relevantRotation = group.RotationAssignments
+                        .Where(r => r.StartDate <= today)
+                        .OrderByDescending(r => r.StartDate)
+                        .FirstOrDefault();
 
-                    if (currentRotation == null)
+                    if (relevantRotation == null)
                     {
                         noRotationGroups.Add(group.GroupName);
                         continue;
                     }
 
-                    int scheduledDaysElapsed = GetScheduledDaysElapsed(currentRotation, today);
-                    int totalExpected = group.Students.Count * scheduledDaysElapsed;
+                    int scheduledDaysElapsed = GetScheduledDaysElapsed(relevantRotation, today);
+                    // Always count at least 1 expected day so a clock-in always registers
+                    int totalExpected = group.Students.Count * Math.Max(scheduledDaysElapsed, 1);
 
                     int totalAttended = await App.Database.AttendanceRecords
-                        .Where(a => a.RotationAssignmentId == currentRotation.RotationAssignmentId
-                                 && a.DateToday <= today)
+                        .Where(a => a.RotationAssignmentId == relevantRotation.RotationAssignmentId)
                         .Select(a => new { a.StudentId, a.DateToday })
                         .Distinct()
                         .CountAsync();
@@ -1072,6 +1104,8 @@ namespace SNRMS.ViewModels
                 {
                     new Axis { Name = "Attendance %", MinLimit = 0, MaxLimit = 100, TextSize = 11 }
                 };
+                var overallAverage = overallValues.Count > 0 ? overallValues.Average() : 0;
+                InstructorAnalyticsAttendanceRate = $"{overallAverage:0.#}%";
 
                 HasInstructorAnalytics = true;
             }
@@ -1079,8 +1113,21 @@ namespace SNRMS.ViewModels
             {
                 ErrorMessage = $"Failed to load instructor analytics: {ex.Message}";
                 HasInstructorAnalytics = false;
+                ClearInstructorAnalyticsSummary();
             }
             finally { IsLoading = false; }
+        }
+
+        private void ClearInstructorAnalyticsSummary()
+        {
+            InstructorAnalyticsName = SelectedAnalyticsInstructor == null
+                ? "No instructor selected"
+                : $"{SelectedAnalyticsInstructor.FirstName} {SelectedAnalyticsInstructor.LastName}".Trim();
+            InstructorAnalyticsSection = "No assigned section";
+            InstructorAnalyticsStudents = 0;
+            InstructorAnalyticsGroups = 0;
+            InstructorAnalyticsRotations = 0;
+            InstructorAnalyticsAttendanceRate = "0%";
         }
 
 

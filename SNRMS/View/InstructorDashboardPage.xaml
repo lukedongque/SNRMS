@@ -667,21 +667,15 @@
                                            Foreground="#2D3748" FontSize="16"/>
                                 <StackPanel Orientation="Horizontal" Spacing="12">
 
-                                    <!-- Filter by Rotation -->
-                                    <ComboBox Header="Filter by Rotation"
-                                              ItemsSource="{Binding RotationAssignments}"
-                                              SelectedItem="{Binding AttendanceFilterRotation, Mode=TwoWay}"
-                                              PlaceholderText="All Rotations"
+                                    <!-- Filter by Group -->
+                                    <ComboBox Header="Filter by Group"
+                                              ItemsSource="{Binding Groups}"
+                                              SelectedItem="{Binding AttendanceFilterGroup, Mode=TwoWay}"
+                                              PlaceholderText="Select Group"
                                               Width="220">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel>
-                                                    <TextBlock>
-                                                        <Run Text="{Binding Group.GroupName}"/>
-                                                        <Run Text=" · "/>
-                                                        <Run Text="{Binding Station.StationName}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
+                                                <TextBlock Text="{Binding GroupName}"/>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>

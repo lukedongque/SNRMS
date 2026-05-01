@@ -103,7 +103,7 @@ namespace SNRMS.ViewModels
 
         // ATTENDANCE ---------------------
         [ObservableProperty] public partial ObservableCollection<AttendanceRecord> AttendanceRecords { get; set; } = new();
-        [ObservableProperty] public partial RotationAssignment? AttendanceFilterRotation { get; set; }
+        [ObservableProperty] public partial Group? AttendanceFilterGroup { get; set; }
         [ObservableProperty] public partial DateTimeOffset AttendanceFilterDate { get; set; } = DateTimeOffset.Now;
         [ObservableProperty] public partial bool HasNoAttendanceRecords { get; set; }
 
@@ -250,25 +250,21 @@ namespace SNRMS.ViewModels
             ErrorMessage = string.Empty;
             try
             {
-                List<AttendanceRecord> records;
-                if (AttendanceFilterRotation != null)
+                if (AttendanceFilterGroup == null)
                 {
-                    records = await _attendanceService.GetAttendanceByRotationAsync(AttendanceFilterRotation.RotationAssignmentId, DateOnly.FromDateTime(AttendanceFilterDate.Date));
-                    AttendanceRecords.Clear();
-                    foreach (var record in records)
-                        AttendanceRecords.Add(record);
-                    if (AttendanceRecords.Count == 0)
-                    {
-                        HasNoAttendanceRecords = true;
-                    }
-                    else HasNoAttendanceRecords = false;
-                }
-                else
-                {
-                    ErrorMessage = "Select Rotation";
+                    ErrorMessage = "Please select a group.";
+                    return;
                 }
 
+                var date = DateOnly.FromDateTime(AttendanceFilterDate.Date);
+                var records = await _attendanceService.GetAttendanceByGroupAndDateAsync(
+                    AttendanceFilterGroup.GroupId, date);
 
+                AttendanceRecords.Clear();
+                foreach (var record in records)
+                    AttendanceRecords.Add(record);
+
+                HasNoAttendanceRecords = AttendanceRecords.Count == 0;
             }
             catch (Exception ex)
             {
@@ -637,9 +633,14 @@ namespace SNRMS.ViewModels
                 {
                     RotationAssignments.Add(rotationAssignment);
                     DaySlot = string.Empty;
+                    SelectedGroup = null;
+                    SelectedRotationHospital = null;
+                    SelectedStation = null;
+                    FilteredStations.Clear();
                     RotationStartDate = DateTimeOffset.Now;
                     RotationEndDate = DateTimeOffset.Now;
-                    SelectedStation = null;
+                    RotationStartTime = null;
+                    RotationEndTime = null;
                 }
                 await LoadDataAsync();
                 SuccessMessage = "Rotation assignment created successfully.";

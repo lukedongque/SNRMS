@@ -100,6 +100,24 @@ namespace SNRMS.Core.Services
                 .ToListAsync();
         }
 
+        public async Task<List<AttendanceRecord>> GetAttendanceByGroupAndDateAsync(int groupId, DateOnly date)
+        {
+            var rotationIds = await _dbContext.RotationAssignments
+                .Where(ra => ra.GroupId == groupId && !ra.IsArchived)
+                .Select(ra => ra.RotationAssignmentId)
+                .ToListAsync();
+
+            return await _dbContext.AttendanceRecords
+                .AsNoTracking()
+                .Where(a => rotationIds.Contains(a.RotationAssignmentId) && a.DateToday == date)
+                .Include(a => a.Student)
+                .Include(a => a.RotationAssignment)
+                    .ThenInclude(r => r.Station)
+                    .ThenInclude(s => s.Hospital)
+                .OrderBy(a => a.Student.LastName)
+                .ToListAsync();
+        }
+
         public async Task<List<AttendanceRecord>> GetAttendanceBySectionAndDateAsync(int sectionId, DateOnly date)
         {
             var groupIds = await _dbContext.Groups
