@@ -122,6 +122,9 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial int InstructorAnalyticsGroups { get; set; }
         [ObservableProperty] public partial int InstructorAnalyticsRotations { get; set; }
         [ObservableProperty] public partial string InstructorAnalyticsAttendanceRate { get; set; } = "0%";
+        [ObservableProperty] public partial string SelectedOverallAttendanceRange { get; set; } = "This Month";
+        [ObservableProperty] public partial string OverallAttendanceScopeDescription { get; set; } = "Attendance for the current month only";
+        public List<string> OverallAttendanceRangeOptions { get; } = new() { "This Month", "All Time" };
 
         // Bar Graph 1: Rotations per Station
         [ObservableProperty] public partial ISeries[] RotationsPerStationSeries { get; set; } = Array.Empty<ISeries>();
@@ -917,10 +920,36 @@ namespace SNRMS.ViewModels
                     return count;
                 }
 
+                int GetScheduledDaysInRange(RotationAssignment rotation, DateOnly rangeStart, DateOnly rangeEnd)
+                {
+                    var scheduledDays = rotation.DaySlot switch
+                    {
+                        "Mon-Tue" => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday },
+                        "Wed-Thu" => new[] { DayOfWeek.Wednesday, DayOfWeek.Thursday },
+                        "Fri-Sat" => new[] { DayOfWeek.Friday, DayOfWeek.Saturday },
+                        _ => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday,
+                                     DayOfWeek.Wednesday, DayOfWeek.Thursday,
+                                     DayOfWeek.Friday }
+                    };
+
+                    var start = rotation.StartDate > rangeStart ? rotation.StartDate : rangeStart;
+                    var end = rotation.EndDate < rangeEnd ? rotation.EndDate : rangeEnd;
+                    if (start > end) return 0;
+
+                    int count = 0;
+                    var d = start;
+                    while (d <= end)
+                    {
+                        if (scheduledDays.Contains(d.DayOfWeek))
+                            count++;
+                        d = d.AddDays(1);
+                    }
+                    return count;
+                }
+
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
                 {
                     // Include any rotation that has started (past or active) — not just today's
-                    var relevantRotation = group.RotationAssignments
                         .Where(r => r.StartDate <= today)
                         .OrderByDescending(r => r.StartDate)
                         .FirstOrDefault();
@@ -932,7 +961,6 @@ namespace SNRMS.ViewModels
                     }
 
                     int scheduledDaysElapsed = GetScheduledDaysElapsed(relevantRotation, today);
-                    // Always count at least 1 expected day so a clock-in always registers
                     int totalExpected = group.Students.Count * Math.Max(scheduledDaysElapsed, 1);
 
                     int totalAttended = await App.Database.AttendanceRecords
@@ -1007,11 +1035,18 @@ namespace SNRMS.ViewModels
                 var overallLabels = new List<string>();
                 var overallValues = new List<double>();
                 var overallTrends = new List<string>(); // ▲ ▼ →
+                var overallRangeStart = SelectedOverallAttendanceRange == "This Month"
+                    ? new DateOnly(today.Year, today.Month, 1)
+                    : DateOnly.MinValue;
+                var overallRangeEnd = today;
+                OverallAttendanceScopeDescription = SelectedOverallAttendanceRange == "This Month"
+                    ? $"Month-to-date attendance, {overallRangeEnd:MMMM yyyy}"
+                    : "Cumulative attendance across all started rotations";
 
                 foreach (var group in activeGroups.OrderBy(g => g.GroupName))
                 {
                     var pastAndCurrentRotations = group.RotationAssignments
-                        .Where(r => r.StartDate <= today)
+                        .Where(r => r.StartDate <= overallRangeEnd && r.EndDate >= overallRangeStart)
                         .ToList();
 
                     if (!pastAndCurrentRotations.Any())
@@ -1022,9 +1057,8 @@ namespace SNRMS.ViewModels
                         continue;
                     }
 
-                    // Total scheduled days across ALL rotations up to today
                     int totalScheduledDays = pastAndCurrentRotations
-                        .Sum(r => GetScheduledDaysElapsed(r, today < r.EndDate ? today : r.EndDate));
+                        .Sum(r => GetScheduledDaysInRange(r, overallRangeStart, overallRangeEnd));
 
                     int totalExpectedOverall = group.Students.Count * totalScheduledDays;
 
@@ -1033,7 +1067,9 @@ namespace SNRMS.ViewModels
                         .ToList();
 
                     int totalAttendedOverall = await App.Database.AttendanceRecords
-                        .Where(a => rotationIds.Contains(a.RotationAssignmentId) && a.DateToday <= today)
+                        .Where(a => rotationIds.Contains(a.RotationAssignmentId)
+                                    && a.DateToday >= overallRangeStart
+                                    && a.DateToday <= overallRangeEnd)
                         .Select(a => new { a.StudentId, a.DateToday })
                         .Distinct()
                         .CountAsync();
@@ -1046,10 +1082,8 @@ namespace SNRMS.ViewModels
                     overallValues.Add(overallRate);
 
                     // Trend arrow: compare current rotation rate vs overall rate
-                    double currentRate = attendanceValues.Count > overallLabels.Count - 1
-                        ? attendanceValues.ElementAtOrDefault(
-                            attendanceLabels.IndexOf(group.GroupName))
-                        : -1;
+                    var attendanceIndex = attendanceLabels.IndexOf(group.GroupName);
+                    double currentRate = attendanceIndex >= 0 ? attendanceValues[attendanceIndex] : -1;
 
                     string trend = currentRate < 0 ? "→"
                         : currentRate > overallRate + 2 ? "▲"
@@ -1097,7 +1131,10 @@ namespace SNRMS.ViewModels
                     new Axis
                     {
                         Labels = overallLabels.Select((l, i) => $"{l} {overallTrends[i]}").ToArray(),
-                        TextSize = 11
+                        TextSize = 11,
+                        LabelsRotation = -15,
+                        MinStep = 1,
+                        ForceStepToMin = true
                     }
                 };
                 OverallAttendanceRateYAxes = new Axis[]
@@ -1128,6 +1165,12 @@ namespace SNRMS.ViewModels
             InstructorAnalyticsGroups = 0;
             InstructorAnalyticsRotations = 0;
             InstructorAnalyticsAttendanceRate = "0%";
+        }
+
+        partial void OnSelectedOverallAttendanceRangeChanged(string value)
+        {
+            if (HasInstructorAnalytics)
+                _ = LoadInstructorAnalyticsAsync();
         }
 
 

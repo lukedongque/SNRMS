@@ -101,6 +101,7 @@ namespace SNRMS.Core.Services
         {
             var student = await _dbContext.Students
                 .AsNoTracking()
+                .Include(s => s.Section)
                 .Include(s => s.Group)
                     .ThenInclude(g => g.Section)
                 .FirstOrDefaultAsync(s => s.StudentId == studentId);
@@ -112,6 +113,7 @@ namespace SNRMS.Core.Services
         {
          
             return await _dbContext.Students
+                .Include(s => s.Section)
                 .Include(s => s.Group).ThenInclude(g => g.Section)
                 .FirstOrDefaultAsync(s => s.StudentNumber == studentNumber);
         }

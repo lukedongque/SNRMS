@@ -26,6 +26,7 @@ namespace SNRMS.View
             StudentsPanel.Visibility = Visibility.Collapsed;
             RotationsPanel.Visibility = Visibility.Collapsed;
             AttendancePanel.Visibility = Visibility.Collapsed;
+            AnalyticsPanel.Visibility = Visibility.Collapsed;
             SettingsPanel.Visibility = Visibility.Collapsed;
 
             if (args.IsSettingsSelected)
@@ -40,6 +41,10 @@ namespace SNRMS.View
                 case "Students":  StudentsPanel.Visibility  = Visibility.Visible; break;
                 case "Rotations": RotationsPanel.Visibility = Visibility.Visible; break;
                 case "Attendance": AttendancePanel.Visibility = Visibility.Visible; break;
+                case "Analytics":
+                    AnalyticsPanel.Visibility = Visibility.Visible;
+                    _ = vm.LoadInstructorAnalyticsAsync();
+                    break;
             }
         }
 

@@ -527,8 +527,15 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="Overall Attendance"
-                                                       FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="Overall Attendance"
+                                                           FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                <ComboBox ItemsSource="{Binding OverallAttendanceRangeOptions}"
+                                                          SelectedItem="{Binding SelectedOverallAttendanceRange, Mode=TwoWay}"
+                                                          Width="130"
+                                                          MinHeight="28"
+                                                          Padding="8,2"/>
+                                            </StackPanel>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
                                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                                     <Border Width="10" Height="10" CornerRadius="2" Background="#38A169"/>
@@ -540,8 +547,29 @@
                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>
-                                        <TextBlock Text="Cumulative attendance across rotations; arrows show movement from current rate"
-                                                   FontSize="12" Foreground="#718096"/>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding OverallAttendanceScopeDescription, Mode=OneWay}"
+                                                       FontSize="12" Foreground="#718096"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="▲" FontSize="11" FontWeight="SemiBold" Foreground="#38A169"/>
+                                                    <TextBlock Text="Improving" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="▼" FontSize="11" FontWeight="SemiBold" Foreground="#E53E3E"/>
+                                                    <TextBlock Text="Declining" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="→" FontSize="11" FontWeight="SemiBold" Foreground="#718096"/>
+                                                    <TextBlock Text="Stable" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
                                         <lvc:CartesianChart
                                                 Series="{Binding OverallAttendanceRateSeries, Mode=OneWay}"
                                                 XAxes="{Binding OverallAttendanceRateXAxes, Mode=OneWay}"

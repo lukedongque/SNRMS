@@ -103,7 +103,7 @@ namespace SNRMS.Core.Services
         public async Task<List<AttendanceRecord>> GetAttendanceByGroupAndDateAsync(int groupId, DateOnly date)
         {
             var rotationIds = await _dbContext.RotationAssignments
-                .Where(ra => ra.GroupId == groupId && !ra.IsArchived)
+                .Where(ra => ra.GroupId == groupId)
                 .Select(ra => ra.RotationAssignmentId)
                 .ToListAsync();
 
@@ -126,7 +126,7 @@ namespace SNRMS.Core.Services
                 .ToListAsync();
 
             var rotationIds = await _dbContext.RotationAssignments
-                .Where(ra => groupIds.Contains(ra.GroupId) && !ra.IsArchived)
+                .Where(ra => groupIds.Contains(ra.GroupId))
                 .Select(ra => ra.RotationAssignmentId)
                 .ToListAsync();
 

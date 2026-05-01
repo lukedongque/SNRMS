@@ -2,6 +2,7 @@
 <Page
     x:Class="SNRMS.View.InstructorDashboardPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:viewmodels="using:SNRMS.ViewModels">
 
@@ -68,6 +69,7 @@
                 <NavigationViewItem Content="Students" Tag="Students" Icon="Contact"/>
                 <NavigationViewItem Content="Rotations" Tag="Rotations" Icon="Calendar"/>
                 <NavigationViewItem Content="Attendance" Tag="Attendance" Icon="Clock"/>
+                <NavigationViewItem Content="Analytics" Tag="Analytics" Icon="Repair"/>
             </NavigationView.MenuItems>
 
             <Grid Padding="32">
@@ -382,7 +384,7 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button VerticalAlignment="Bottom" Content="Delete Student" 
+                                <Button VerticalAlignment="Bottom" Content="Remove Student" 
                                         Click="DeleteStudent_Clicked"
                                         Background="#E53E3E" Foreground="White" CornerRadius="8"/>
                                 <ComboBox Header="Assign to Group"
@@ -811,6 +813,247 @@
                                                         Converter={StaticResource BoolToVisible}}"/>
                             </StackPanel>
                         </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ANALYTICS PANEL -->
+                <ScrollViewer x:Name="AnalyticsPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="20">
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Rotation Analytics" FontSize="28" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                <TextBlock Text="Workload, rotations, and attendance rating for your assigned section"
+                                           FontSize="14" Foreground="#909191"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1"
+                                    Command="{Binding LoadInstructorAnalyticsCommand}"
+                                    Background="#1B3A6B" Foreground="White"
+                                    CornerRadius="8" Padding="14,8"
+                                    VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE895;" FontSize="14"/>
+                                    <TextBlock Text="Refresh"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Border Background="#FFF5F5" CornerRadius="8" Padding="12,8"
+                                BorderBrush="#FEB2B2" BorderThickness="1"
+                                Visibility="{Binding HasInstructorAnalytics, Mode=OneWay,
+                                             Converter={StaticResource BoolToInvisible}}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE7BA;" Foreground="#E53E3E" FontSize="14"/>
+                                <TextBlock Text="No assigned section analytics are available yet."
+                                           Foreground="#C53030" FontSize="13"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Spacing="16"
+                                    Visibility="{Binding HasInstructorAnalytics, Mode=OneWay,
+                                                 Converter={StaticResource BoolToVisible}}">
+                            <Border Background="#F7FAFC" CornerRadius="8" Padding="18"
+                                    BorderBrush="#D8E2EE" BorderThickness="1">
+                                <Grid ColumnSpacing="20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding InstructorAnalyticsName, Mode=OneWay}"
+                                                   FontSize="22" FontWeight="SemiBold"
+                                                   Foreground="#1B3A6B"/>
+                                        <TextBlock Text="{Binding InstructorAnalyticsSection, Mode=OneWay}"
+                                                   FontSize="13" Foreground="#4A5568"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="14"
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="Students" FontSize="11" Foreground="#718096"/>
+                                            <TextBlock Text="{Binding InstructorAnalyticsStudents, Mode=OneWay}"
+                                                       FontSize="24" FontWeight="Bold" Foreground="#1B3A6B"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="14"
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="Groups" FontSize="11" Foreground="#718096"/>
+                                            <TextBlock Text="{Binding InstructorAnalyticsGroups, Mode=OneWay}"
+                                                       FontSize="24" FontWeight="Bold" Foreground="#2B9ED4"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="3" Background="White" CornerRadius="8" Padding="14"
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="Rotations" FontSize="11" Foreground="#718096"/>
+                                            <TextBlock Text="{Binding InstructorAnalyticsRotations, Mode=OneWay}"
+                                                       FontSize="24" FontWeight="Bold" Foreground="#38A169"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="4" Background="White" CornerRadius="8" Padding="14"
+                                            BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="Student Attendance" FontSize="11" Foreground="#718096"/>
+                                            <TextBlock Text="{Binding InstructorAnalyticsAttendanceRate, Mode=OneWay}"
+                                                       FontSize="24" FontWeight="Bold" Foreground="#ED8936"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Grid ColumnSpacing="16" RowSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Border Grid.Row="0" Grid.Column="0" Background="White" CornerRadius="8" Padding="18"
+                                        BorderBrush="#E2E8F0" BorderThickness="1">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Rotations per Station"
+                                                   FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                        <TextBlock Text="Assigned rotations grouped by clinical station"
+                                                   FontSize="12" Foreground="#718096"/>
+                                        <lvc:CartesianChart
+                                            Series="{Binding RotationsPerStationSeries, Mode=OneWay}"
+                                            XAxes="{Binding RotationsPerStationXAxes, Mode=OneWay}"
+                                            YAxes="{Binding RotationsPerStationYAxes, Mode=OneWay}"
+                                            Height="280"
+                                            LegendPosition="Hidden"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="0" Grid.Column="1" Background="White" CornerRadius="8" Padding="18"
+                                        BorderBrush="#E2E8F0" BorderThickness="1">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Students per Group"
+                                                   FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                        <TextBlock Text="Current active student count by group"
+                                                   FontSize="12" Foreground="#718096"/>
+                                        <lvc:CartesianChart
+                                            Series="{Binding StudentsPerGroupSeries, Mode=OneWay}"
+                                            XAxes="{Binding StudentsPerGroupXAxes, Mode=OneWay}"
+                                            YAxes="{Binding StudentsPerGroupYAxes, Mode=OneWay}"
+                                            Height="280"
+                                            LegendPosition="Hidden"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="1" Grid.Column="0" Background="White" CornerRadius="8" Padding="18"
+                                        BorderBrush="#E2E8F0" BorderThickness="1">
+                                    <StackPanel Spacing="8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Current Rotation Attendance"
+                                                       FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <Border Width="10" Height="10" CornerRadius="2" Background="#38A169"/>
+                                                    <TextBlock Text="80%+" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <Border Width="10" Height="10" CornerRadius="2" Background="#E53E3E"/>
+                                                    <TextBlock Text="Below" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="Expected clock-ins compared with recorded attendance"
+                                                   FontSize="12" Foreground="#718096"/>
+                                        <lvc:CartesianChart
+                                                Series="{Binding AttendanceRateSeries, Mode=OneWay}"
+                                                XAxes="{Binding AttendanceRateXAxes, Mode=OneWay}"
+                                                YAxes="{Binding AttendanceRateYAxes, Mode=OneWay}"
+                                                Height="260"
+                                                LegendPosition="Hidden"/>
+                                        <TextBlock Text="{Binding NoRotationMessage, Mode=OneWay}"
+                                                   FontSize="12" FontStyle="Italic"
+                                                   Foreground="#ED8936"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="{Binding NoRotationMessage,
+                                                                Converter={StaticResource StringToVisible},
+                                                                Mode=OneWay}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Row="1" Grid.Column="1" Background="White" CornerRadius="8" Padding="18"
+                                        BorderBrush="#E2E8F0" BorderThickness="1">
+                                    <StackPanel Spacing="8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="Overall Attendance"
+                                                           FontSize="15" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                <ComboBox ItemsSource="{Binding OverallAttendanceRangeOptions}"
+                                                          SelectedItem="{Binding SelectedOverallAttendanceRange, Mode=TwoWay}"
+                                                          Width="130"
+                                                          MinHeight="28"
+                                                          Padding="8,2"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <Border Width="10" Height="10" CornerRadius="2" Background="#38A169"/>
+                                                    <TextBlock Text="80%+" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <Border Width="10" Height="10" CornerRadius="2" Background="#E53E3E"/>
+                                                    <TextBlock Text="Below" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding OverallAttendanceScopeDescription, Mode=OneWay}"
+                                                       FontSize="12" Foreground="#718096"/>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="▲" FontSize="11" FontWeight="SemiBold" Foreground="#38A169"/>
+                                                    <TextBlock Text="Improving" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="▼" FontSize="11" FontWeight="SemiBold" Foreground="#E53E3E"/>
+                                                    <TextBlock Text="Declining" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="→" FontSize="11" FontWeight="SemiBold" Foreground="#718096"/>
+                                                    <TextBlock Text="Stable" FontSize="11" Foreground="#718096"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                        <lvc:CartesianChart
+                                                Series="{Binding OverallAttendanceRateSeries, Mode=OneWay}"
+                                                XAxes="{Binding OverallAttendanceRateXAxes, Mode=OneWay}"
+                                                YAxes="{Binding OverallAttendanceRateYAxes, Mode=OneWay}"
+                                                Height="260"
+                                                LegendPosition="Hidden"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
 

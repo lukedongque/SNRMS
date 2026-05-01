@@ -114,8 +114,9 @@ namespace SNRMS.ViewModels
                     StudentDisplayName = $"{student.FirstName} {student.LastName}";
                     StudentNumber = student.StudentNumber;
                     StudentGroupName = student.Group?.GroupName ?? "No Group";
-                    StudentSectionName = student.Group?.Section?.SectionName ?? "No Section";
-                    StudentYearLevel = student.Group?.Section?.YearLevel ?? 0;
+                    var section = student.Group?.Section ?? student.Section;
+                    StudentSectionName = section?.SectionName ?? "No Section";
+                    StudentYearLevel = section?.YearLevel ?? 0;
                 }
 
                 // Load current rotation (safe — no throw)

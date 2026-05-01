@@ -6,6 +6,11 @@ using System.Text;
 using SNRMS.Core.Models;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 using System.Threading.Tasks;
 using System.Linq;
 namespace SNRMS.ViewModels
@@ -107,6 +112,31 @@ namespace SNRMS.ViewModels
         [ObservableProperty] public partial DateTimeOffset AttendanceFilterDate { get; set; } = DateTimeOffset.Now;
         [ObservableProperty] public partial bool HasNoAttendanceRecords { get; set; }
 
+        //ANALYTICS ---------------------
+        [ObservableProperty] public partial bool HasInstructorAnalytics { get; set; }
+        [ObservableProperty] public partial string InstructorAnalyticsName { get; set; } = "No instructor selected";
+        [ObservableProperty] public partial string InstructorAnalyticsSection { get; set; } = "No assigned section";
+        [ObservableProperty] public partial int InstructorAnalyticsStudents { get; set; }
+        [ObservableProperty] public partial int InstructorAnalyticsGroups { get; set; }
+        [ObservableProperty] public partial int InstructorAnalyticsRotations { get; set; }
+        [ObservableProperty] public partial string InstructorAnalyticsAttendanceRate { get; set; } = "0%";
+        [ObservableProperty] public partial string NoRotationMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial string SelectedOverallAttendanceRange { get; set; } = "This Month";
+        [ObservableProperty] public partial string OverallAttendanceScopeDescription { get; set; } = "Attendance for the current month only";
+        public List<string> OverallAttendanceRangeOptions { get; } = new() { "This Month", "All Time" };
+        [ObservableProperty] public partial ISeries[] RotationsPerStationSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] RotationsPerStationXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] RotationsPerStationYAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial ISeries[] StudentsPerGroupSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] StudentsPerGroupXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] StudentsPerGroupYAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial ISeries[] AttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] AttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] AttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial ISeries[] OverallAttendanceRateSeries { get; set; } = Array.Empty<ISeries>();
+        [ObservableProperty] public partial Axis[] OverallAttendanceRateXAxes { get; set; } = Array.Empty<Axis>();
+        [ObservableProperty] public partial Axis[] OverallAttendanceRateYAxes { get; set; } = Array.Empty<Axis>();
+
         //OTHERS ---------------------
         [ObservableProperty]  public partial bool IsLoading { get; set; }
         [ObservableProperty] public partial string ErrorMessage { get; set; } = string.Empty;
@@ -174,6 +204,7 @@ namespace SNRMS.ViewModels
                     Groups.Clear();
                     Students.Clear();
                     RotationAssignments.Clear();
+                    ClearInstructorAnalyticsSummary();
                     return;
                 }
 
@@ -202,6 +233,8 @@ namespace SNRMS.ViewModels
                 {
                     RotationAssignments.Clear();
                 }
+
+                await LoadInstructorAnalyticsAsync();
             }
             catch (Exception ex)
             {
@@ -811,6 +844,339 @@ namespace SNRMS.ViewModels
             StudentEmail = string.Empty;
             ErrorMessage = string.Empty;
         }
+
+        [RelayCommand] public async Task LoadInstructorAnalyticsAsync()
+        {
+            var user = SessionManager.CurrentUser;
+            if (user == null || user.InstructorId == null)
+            {
+                ErrorMessage = "No active session found. Please log in.";
+                ClearInstructorAnalyticsSummary();
+                return;
+            }
+
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var instructorId = user.InstructorId.Value;
+                var section = await App.Database.Sections
+                    .Include(s => s.Groups).ThenInclude(g => g.Students.Where(st => !st.IsArchived))
+                    .Include(s => s.Groups).ThenInclude(g => g.RotationAssignments.Where(r => !r.IsArchived))
+                        .ThenInclude(ra => ra.Station).ThenInclude(s => s.Hospital)
+                    .FirstOrDefaultAsync(s => s.InstructorId == instructorId);
+
+                if (section == null)
+                {
+                    ClearInstructorAnalyticsSummary();
+                    ErrorMessage = "You do not have an assigned section yet.";
+                    return;
+                }
+
+                var activeGroups = section.Groups.Where(g => !g.IsArchived).OrderBy(g => g.GroupName).ToList();
+                InstructorAnalyticsName = string.IsNullOrWhiteSpace(InstructorDisplayName)
+                    ? "Instructor"
+                    : InstructorDisplayName;
+                InstructorAnalyticsSection = $"{section.SectionName} | Year {section.YearLevel}";
+                InstructorAnalyticsGroups = activeGroups.Count;
+                InstructorAnalyticsStudents = activeGroups.Sum(g => g.Students.Count);
+                InstructorAnalyticsRotations = activeGroups.Sum(g => g.RotationAssignments.Count);
+
+                var rotationsByStation = activeGroups
+                    .SelectMany(g => g.RotationAssignments)
+                    .GroupBy(r => new
+                    {
+                        Station = r.Station?.StationName ?? "Unknown",
+                        Hospital = r.Station?.Hospital?.HospitalName ?? string.Empty
+                    })
+                    .OrderByDescending(g => g.Count())
+                    .ToList();
+
+                var stationLabels = rotationsByStation
+                    .Select(g =>
+                    {
+                        if (string.IsNullOrEmpty(g.Key.Hospital)) return g.Key.Station;
+                        var abbrev = string.Concat(g.Key.Hospital
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(w => w[0]))
+                            .ToUpper();
+                        return $"{g.Key.Station} ({abbrev})";
+                    })
+                    .ToArray();
+
+                RotationsPerStationSeries = new ISeries[]
+                {
+                    new ColumnSeries<double>
+                    {
+                        Name = "Rotations",
+                        Values = rotationsByStation.Select(g => (double)g.Count()).ToArray(),
+                        Fill = new SolidColorPaint(new SKColor(27, 58, 107)),
+                        MaxBarWidth = 40
+                    }
+                };
+                RotationsPerStationXAxes = new Axis[]
+                {
+                    new Axis { Labels = stationLabels, LabelsRotation = -25, TextSize = 10, MinStep = 1, ForceStepToMin = true }
+                };
+                RotationsPerStationYAxes = new Axis[]
+                {
+                    new Axis { Name = "Rotations", MinLimit = 0, TextSize = 11 }
+                };
+
+                var groupLabels = activeGroups.Select(g => g.GroupName).ToArray();
+                StudentsPerGroupSeries = new ISeries[]
+                {
+                    new ColumnSeries<double>
+                    {
+                        Name = "Students",
+                        Values = activeGroups.Select(g => (double)g.Students.Count).ToArray(),
+                        Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
+                        MaxBarWidth = 40
+                    }
+                };
+                StudentsPerGroupXAxes = new Axis[] { new Axis { Labels = groupLabels, TextSize = 11 } };
+                StudentsPerGroupYAxes = new Axis[] { new Axis { Name = "Students", MinLimit = 0, TextSize = 11 } };
+
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                var attendanceLabels = new List<string>();
+                var attendanceValues = new List<double>();
+                var noRotationGroups = new List<string>();
+
+                int GetScheduledDaysElapsed(RotationAssignment rotation, DateOnly currentDate)
+                {
+                    var scheduledDays = rotation.DaySlot switch
+                    {
+                        "Mon-Tue" => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday },
+                        "Wed-Thu" => new[] { DayOfWeek.Wednesday, DayOfWeek.Thursday },
+                        "Fri-Sat" => new[] { DayOfWeek.Friday, DayOfWeek.Saturday },
+                        _ => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday }
+                    };
+
+                    var count = 0;
+                    var d = rotation.StartDate;
+                    while (d <= currentDate && d <= rotation.EndDate)
+                    {
+                        if (scheduledDays.Contains(d.DayOfWeek))
+                            count++;
+                        d = d.AddDays(1);
+                    }
+                    return count;
+                }
+
+                int GetScheduledDaysInRange(RotationAssignment rotation, DateOnly rangeStart, DateOnly rangeEnd)
+                {
+                    var scheduledDays = rotation.DaySlot switch
+                    {
+                        "Mon-Tue" => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday },
+                        "Wed-Thu" => new[] { DayOfWeek.Wednesday, DayOfWeek.Thursday },
+                        "Fri-Sat" => new[] { DayOfWeek.Friday, DayOfWeek.Saturday },
+                        _ => new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday }
+                    };
+
+                    var start = rotation.StartDate > rangeStart ? rotation.StartDate : rangeStart;
+                    var end = rotation.EndDate < rangeEnd ? rotation.EndDate : rangeEnd;
+                    if (start > end) return 0;
+
+                    var count = 0;
+                    var d = start;
+                    while (d <= end)
+                    {
+                        if (scheduledDays.Contains(d.DayOfWeek))
+                            count++;
+                        d = d.AddDays(1);
+                    }
+                    return count;
+                }
+
+                foreach (var group in activeGroups)
+                {
+                    var relevantRotation = group.RotationAssignments
+                        .Where(r => r.StartDate <= today)
+                        .OrderByDescending(r => r.StartDate)
+                        .FirstOrDefault();
+
+                    if (relevantRotation == null)
+                    {
+                        noRotationGroups.Add(group.GroupName);
+                        continue;
+                    }
+
+                    var scheduledDaysElapsed = GetScheduledDaysElapsed(relevantRotation, today);
+                    var totalExpected = group.Students.Count * Math.Max(scheduledDaysElapsed, 1);
+
+                    var totalAttended = await App.Database.AttendanceRecords
+                        .Where(a => a.RotationAssignmentId == relevantRotation.RotationAssignmentId)
+                        .Select(a => new { a.StudentId, a.DateToday })
+                        .Distinct()
+                        .CountAsync();
+
+                    var rate = totalExpected > 0
+                        ? Math.Round((totalAttended / (double)totalExpected) * 100, 1)
+                        : 0;
+
+                    attendanceLabels.Add(group.GroupName);
+                    attendanceValues.Add(rate);
+                }
+
+                AttendanceRateSeries = new ISeries[]
+                {
+                    new ColumnSeries<double?>
+                    {
+                        Name = "80%+",
+                        Values = attendanceValues.Select(v => v >= 80 ? v : (double?)null).ToArray(),
+                        Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
+                        MaxBarWidth = 40
+                    },
+                    new ColumnSeries<double?>
+                    {
+                        Name = "Below 80%",
+                        Values = attendanceValues.Select(v => v < 80 ? v : (double?)null).ToArray(),
+                        Fill = new SolidColorPaint(new SKColor(229, 62, 62)),
+                        MaxBarWidth = 40
+                    },
+                    new LineSeries<double?>
+                    {
+                        Name = "80% Target",
+                        Values = attendanceLabels.Select(_ => (double?)80).ToArray(),
+                        Stroke = new SolidColorPaint(new SKColor(237, 137, 54)) { StrokeThickness = 2 },
+                        Fill = null,
+                        GeometrySize = 0,
+                        LineSmoothness = 0
+                    }
+                };
+                AttendanceRateXAxes = new Axis[] { new Axis { Labels = attendanceLabels.ToArray(), TextSize = 11 } };
+                AttendanceRateYAxes = new Axis[] { new Axis { Name = "Attendance %", MinLimit = 0, MaxLimit = 100, TextSize = 11 } };
+                NoRotationMessage = noRotationGroups.Count > 0
+                    ? $"No started rotation: {string.Join(", ", noRotationGroups)}"
+                    : string.Empty;
+
+                var overallLabels = new List<string>();
+                var overallValues = new List<double>();
+                var overallTrends = new List<string>();
+                var overallRangeStart = SelectedOverallAttendanceRange == "This Month"
+                    ? new DateOnly(today.Year, today.Month, 1)
+                    : DateOnly.MinValue;
+                var overallRangeEnd = today;
+                OverallAttendanceScopeDescription = SelectedOverallAttendanceRange == "This Month"
+                    ? $"Month-to-date attendance, {overallRangeEnd:MMMM yyyy}"
+                    : "Cumulative attendance across all started rotations";
+
+                foreach (var group in activeGroups)
+                {
+                    var pastAndCurrentRotations = group.RotationAssignments
+                        .Where(r => r.StartDate <= overallRangeEnd && r.EndDate >= overallRangeStart)
+                        .ToList();
+
+                    if (!pastAndCurrentRotations.Any())
+                    {
+                        overallLabels.Add(group.GroupName);
+                        overallValues.Add(0);
+                        overallTrends.Add("→");
+                        continue;
+                    }
+
+                    var totalScheduledDays = pastAndCurrentRotations
+                        .Sum(r => GetScheduledDaysInRange(r, overallRangeStart, overallRangeEnd));
+                    var totalExpectedOverall = group.Students.Count * totalScheduledDays;
+                    var rotationIds = pastAndCurrentRotations.Select(r => r.RotationAssignmentId).ToList();
+                    var totalAttendedOverall = await App.Database.AttendanceRecords
+                        .Where(a => rotationIds.Contains(a.RotationAssignmentId)
+                                    && a.DateToday >= overallRangeStart
+                                    && a.DateToday <= overallRangeEnd)
+                        .Select(a => new { a.StudentId, a.DateToday })
+                        .Distinct()
+                        .CountAsync();
+
+                    var overallRate = totalExpectedOverall > 0
+                        ? Math.Round((totalAttendedOverall / (double)totalExpectedOverall) * 100, 1)
+                        : 0;
+
+                    overallLabels.Add(group.GroupName);
+                    overallValues.Add(overallRate);
+
+                    var attendanceIndex = attendanceLabels.IndexOf(group.GroupName);
+                    var currentRate = attendanceIndex >= 0 ? attendanceValues[attendanceIndex] : -1;
+                    var trend = currentRate < 0 ? "→"
+                        : currentRate > overallRate + 2 ? "▲"
+                        : currentRate < overallRate - 2 ? "▼"
+                        : "→";
+                    overallTrends.Add(trend);
+                }
+
+                OverallAttendanceRateSeries = new ISeries[]
+                {
+                    new ColumnSeries<double?>
+                    {
+                        Name = "80%+",
+                        Values = overallValues.Select(v => v >= 80 ? v : (double?)null).ToArray(),
+                        Fill = new SolidColorPaint(new SKColor(56, 161, 105)),
+                        MaxBarWidth = 40
+                    },
+                    new ColumnSeries<double?>
+                    {
+                        Name = "Below 80%",
+                        Values = overallValues.Select(v => v < 80 ? v : (double?)null).ToArray(),
+                        Fill = new SolidColorPaint(new SKColor(229, 62, 62)),
+                        MaxBarWidth = 40
+                    },
+                    new LineSeries<double?>
+                    {
+                        Name = "80% Target",
+                        Values = overallLabels.Select(_ => (double?)80).ToArray(),
+                        Stroke = new SolidColorPaint(new SKColor(27, 58, 107)) { StrokeThickness = 2 },
+                        Fill = null,
+                        GeometrySize = 0,
+                        LineSmoothness = 0
+                    }
+                };
+                OverallAttendanceRateXAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        Labels = overallLabels.Select((label, index) => $"{label} {overallTrends[index]}").ToArray(),
+                        TextSize = 11,
+                        LabelsRotation = -15,
+                        MinStep = 1,
+                        ForceStepToMin = true
+                    }
+                };
+                OverallAttendanceRateYAxes = new Axis[] { new Axis { Name = "Attendance %", MinLimit = 0, MaxLimit = 100, TextSize = 11 } };
+                InstructorAnalyticsAttendanceRate = $"{(overallValues.Count > 0 ? overallValues.Average() : 0):0.#}%";
+                HasInstructorAnalytics = true;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load analytics: {ex.Message}";
+                ClearInstructorAnalyticsSummary();
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void ClearInstructorAnalyticsSummary()
+        {
+            HasInstructorAnalytics = false;
+            InstructorAnalyticsName = string.IsNullOrWhiteSpace(InstructorDisplayName) ? "Instructor" : InstructorDisplayName;
+            InstructorAnalyticsSection = "No assigned section";
+            InstructorAnalyticsStudents = 0;
+            InstructorAnalyticsGroups = 0;
+            InstructorAnalyticsRotations = 0;
+            InstructorAnalyticsAttendanceRate = "0%";
+            NoRotationMessage = string.Empty;
+            RotationsPerStationSeries = Array.Empty<ISeries>();
+            StudentsPerGroupSeries = Array.Empty<ISeries>();
+            AttendanceRateSeries = Array.Empty<ISeries>();
+            OverallAttendanceRateSeries = Array.Empty<ISeries>();
+        }
+
+        partial void OnSelectedOverallAttendanceRangeChanged(string value)
+        {
+            if (HasInstructorAnalytics)
+                _ = LoadInstructorAnalyticsAsync();
+        }
+
         //SESSION MANAGEMENT --------------------------------------------------
         [RelayCommand] public void Logout()
         {
