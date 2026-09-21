@@ -32,6 +32,10 @@ namespace SNRMS
         {
             InitializeComponent();
             SystemBackdrop = new MicaBackdrop();
+            if (Content is FrameworkElement rootElement)
+            {
+                rootElement.RequestedTheme = ElementTheme.Light;
+            }
             RootFrame.Navigate(typeof(LoginPage));
             this.Title = "NurseSync";
 
